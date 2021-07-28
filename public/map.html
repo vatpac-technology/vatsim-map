@@ -1,0 +1,112 @@
+<html>
+    <head>
+        <script src='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js'></script>
+        <link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet' />
+        <style>
+            body {
+              margin: 0;
+              padding: 0;
+            }
+      
+            #map {
+              position: absolute;
+              top: 0;
+              bottom: 0;
+              width: 100%;
+            }
+
+            .marker {
+                background-image: url('/static/aircraft.png');
+                background-size: cover;
+                width: 5px;
+                height: 5px;
+                border-radius: 0%;
+                cursor: pointer;
+            }
+          </style>
+    </head>
+    <body>
+        <div id='map'></div>
+        <!-- Load the `mapbox-gl-geocoder` plugin. -->
+        <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
+        <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" type="text/css">
+        
+        <!-- Promise polyfill script is required -->
+        <!-- to use Mapbox GL Geocoder in IE 11. -->
+        <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
+        <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiY3ljbG9wdGl2aXR5IiwiYSI6ImNqcDY0NnZnYzBmYjYzd284dzZudmdvZmUifQ.RyR4jd1HRggrbeZRvkv0xg';
+        var map = new mapboxgl.Map({
+            container: 'map', // container ID
+            style: 'mapbox://styles/cycloptivity/ckrai7rg601cw18p5zu4ntq27', // style URL
+            center: [134.9, -28.2], // starting position [lng, lat]
+            zoom: 3.2 // starting zoom
+        });
+     
+        const getPilots = async () => {
+            const response = await fetch('http://localhost:8080/v1/pilots');
+            const json = await response.json();
+             
+            map.on('load', function () {
+                // Add an image to use as a custom marker
+                map.loadImage(
+                'http://localhost:8080/static/aircraft.png',
+                function (error, image) {
+                if (error) throw error;
+                map.addImage('custom-marker', image);
+                // SDF
+                // map.loadImage('http://localhost:8080/static/aircraft.png', function(error0, image) {
+                // if (error0) throw error0;
+                // map.addImage('custom-marker', image, {
+                //     "sdf": "false"
+                // });
+
+                map.addSource('points', {
+                'type': 'geojson',
+                'data': json
+                });
+                
+                // Add a symbol layer
+                map.addLayer({
+                'id': 'points',
+                'type': 'symbol',
+                'source': 'points',
+                'layout': {
+                    'icon-image': 'custom-marker',
+                    'icon-size': 0.1,
+                    'icon-rotate': [ 'get', 'heading', ['object', ['get', 'pilot']]],
+                    // get the title name from the source's "title" property
+                    'text-field': [
+                        'format', ['get', 'callsign', ['object', ['get', 'pilot']]], { 'text-color': '#000000'}],
+                    'text-font': [
+                    'Open Sans Semibold',
+                    'Arial Unicode MS Bold'
+                    ],
+                    'text-offset': [0, 2],
+                    'text-anchor': 'bottom'
+                    
+                }
+                });
+                }
+                );
+            });
+        };
+        getPilots();
+
+        //options.localGeocoder Function? A function accepting the query string which performs local geocoding to supplement results from the Mapbox Geocoding API. Expected to return an Array of GeoJSON Features in the Carmen GeoJSON format.
+
+        // Add the search control to the map.
+        map.addControl(
+        new MapboxGeocoder({
+        accessToken: mapboxgl.accessToken,
+        mapboxgl: mapboxgl,
+        // options: {
+        //     localGeocoder
+        // }
+        })
+        );
+       
+        </script>
+    </body>
+</html>

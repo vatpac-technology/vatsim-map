@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Maps>
+  <Map Type="System" Name="FIR_BDRY" Priority="2">
+    <Line Name="AUSBOX">
+        -092400.000+1605400.000
+        -430000.000+1605400.000
+        -430000.000+0990000.000
+        -092400.000+0990000.000
+        -092400.000+1605400.000
+    </Line>
+  </Map>
+</Maps>
