@@ -14,6 +14,7 @@ export function clearCache(){
 }
 
 export async function getPilots(){
+    // Cache report
     console.log(cache.getStats());
     try{
         var firs = await getFIRBoundaries('https://raw.githubusercontent.com/vatSys/australia-dataset/master/Maps/FIR_BOUNDARIES.xml');
@@ -90,26 +91,28 @@ async function getFIRBoundaries (url) {
                 return data;
             })
             .catch(err => console.log(err));
-            xml = await xml2js(res, {compact: true, spaces: 4});
+            data = await xml2js(res, {compact: true, spaces: 4});
         }catch(err){
             throw ParserError(err);
         }
 
         // Handle single Line Map
-        if(Array.isArray(xml.Maps.Map.Line)){
-            xml.Maps.Map.Line.forEach(function (line){
+        if(Array.isArray(data.Maps.Map.Line)){
+            data.Maps.Map.Line.forEach(function (line){
                 firObjs.push(lineToFIR(line))
             });
         }else{
-            firObjs.push(lineToFIR(xml.Maps.Map.Line))
+            firObjs.push(lineToFIR(data.Maps.Map.Line))
         }
         console.log(`Cached firObjs len ${firObjs.length}`)
         cache.set("xml", firObjs, 86400);
+        return firObjs;
     }else{
-        console.log(`firObjs len ${firObjs.length}`)
+        console.log(`firObjs len ${data.length}`)
         console.log("getFIRBoundaries cache hit")
+        return data;
     }
-    return firObjs;
+    
 }
 
 function firLineToPoly (firs) {
@@ -117,13 +120,6 @@ function firLineToPoly (firs) {
     firs.forEach(function(fir){
         var poly = turf.lineToPolygon(turf.lineString(fir.line),{mutate: true});
         fir.poly = poly;
-        // Dump GeoJSON poly for debugging in https://geojson.io
-        // console.log(JSON.stringify(poly, null, 1));
-        // fs.writeFile(`./out/${fir.name}.json`, JSON.stringify(poly, null, 1), 'utf8', function(err) {
-        //     if (err) throw err;
-        //     console.log(`./out/${fir.name}.json`);
-        //     }
-        // );
     });
     return firs;
 }
@@ -138,7 +134,6 @@ function lineToFIR (line) {
     // Take vatSys lines and parse into line array
     // ±DDMMSS.SSSS±DDDMMSS.SSSS
     // (?<latD>[+-][0-9]{2})(?<latM>[0-9]{2})(?<latS>[0-9]{2}\.[0-9]{3})(?<lonD>[+-][0-9]{3})(?<lonM>[0-9]{2})(?<lonS>[0-9]{2}\.[0-9]{3})
-    // const re = new RegExp(/(?<lat>[+-][0-9]{6}\.[0-9]{3})(?<lon>[+-][0-9]{7}\.[0-9]{3})/g);
     const re = new RegExp(/(?<latRef>[+-])(?<latD>[0-9]{2})(?<latM>[0-9]{2})(?<latS>[0-9]{2}\.[0-9]{3})(?<lonRef>[+-])(?<lonD>[0-9]{3})(?<lonM>[0-9]{2})(?<lonS>[0-9]{2}\.[0-9]{3})/g)
     var lines = [...line._text.matchAll(re)];
     lines.forEach(function(l){
@@ -161,7 +156,6 @@ function lineToFIR (line) {
         var [ latitude, longitude ] = dms2dec(pos.latitude,pos.latRef,pos.longitude,pos.lonRef);
         // Turf is geoJSON so we continue the stupidity here with long THEN lat.
         var a = [longitude, latitude]
-        // Append extract arrays to fir.line array
         fir.line.push(a);
     });
     return fir
@@ -174,7 +168,6 @@ function pointInFIR (point, firs) {
     firs.forEach(function(fir){
         if(mappedFIRs.includes(fir.name)) {
             if(turf.booleanPointInPolygon(point,fir.poly)){
-                console.log(`Matched in ${fir.name}`)
                 inFIR = true;
             }
         };
