@@ -43,56 +43,17 @@
             center: [134.9, -28.2], // starting position [lng, lat]
             zoom: 3.2 // starting zoom
         });
-     
-        const getPilots = async () => {
-            const response = await fetch('http://localhost:8080/v1/pilots');
-            const json = await response.json();
              
-            map.on('load', function () {
-                // Add an image to use as a custom marker
-                map.loadImage(
-                'http://localhost:8080/static/aircraft.png',
-                function (error, image) {
+        map.on('load', function () {
+            // Add an image to use as a custom marker
+            map.loadImage(
+            'http://localhost:8080/static/aircraft.png',
+            function (error, image) {
                 if (error) throw error;
                 map.addImage('custom-marker', image);
-                // SDF
-                // map.loadImage('http://localhost:8080/static/aircraft.png', function(error0, image) {
-                // if (error0) throw error0;
-                // map.addImage('custom-marker', image, {
-                //     "sdf": "false"
-                // });
-
-                map.addSource('points', {
-                'type': 'geojson',
-                'data': json
-                });
-                
-                // Add a symbol layer
-                map.addLayer({
-                'id': 'points',
-                'type': 'symbol',
-                'source': 'points',
-                'layout': {
-                    'icon-image': 'custom-marker',
-                    'icon-size': 0.1,
-                    'icon-rotate': [ 'get', 'heading', ['object', ['get', 'pilot']]],
-                    // get the title name from the source's "title" property
-                    'text-field': [
-                        'format', ['get', 'callsign', ['object', ['get', 'pilot']]], { 'text-color': '#000000'}],
-                    'text-font': [
-                    'Open Sans Semibold',
-                    'Arial Unicode MS Bold'
-                    ],
-                    'text-offset': [0, 2],
-                    'text-anchor': 'bottom'
-                    
-                }
-                });
-                }
-                );
-            });
-        };
-        getPilots();
+            }
+            );
+        });
 
         //options.localGeocoder Function? A function accepting the query string which performs local geocoding to supplement results from the Mapbox Geocoding API. Expected to return an Array of GeoJSON Features in the Carmen GeoJSON format.
 
@@ -106,6 +67,54 @@
         // }
         })
         );
+
+
+        var refresh = setInterval(setPilotsLayer, 15000);
+        var drawn = false;
+        async function setPilotsLayer () {
+            var response = await fetch('http://localhost:8080/v1/pilots');
+            var json = await response.json();
+            if(drawn == false){
+                try{
+                    map.addSource('points', {
+                        'type': 'geojson',
+                        'attribution': 'https://github.com/Kahn/vatsim-map',
+                        'data': json
+                    });
+                    // Add a symbol layer
+                    map.addLayer({
+                    'id': 'points',
+                    'type': 'symbol',
+                    'source': 'points',
+                    'layout': {
+                        'icon-image': 'custom-marker',
+                        'icon-size': 0.1,
+                        'icon-rotate': [ 'get', 'heading', ['object', ['get', 'pilot']]],
+                        'icon-allow-overlap': false,
+                        'icon-ignore-placement': false,
+                        // get the title name from the source's "title" property
+                        'text-field': [
+                            'format', ['get', 'callsign', ['object', ['get', 'pilot']]], { 'text-color': '#000000'}],
+                        'text-font': [
+                            'Open Sans Semibold',
+                            'Arial Unicode MS Bold'
+                        ],
+                        'text-offset': [1, 1],
+                        // 'text-anchor': 'bottom',
+                        'text-variable-anchor': ["top", "bottom", "left"],
+                        'text-allow-overlap': false,
+                        'text-ignore-placement': false
+                    }
+                    });
+                    drawn = true;
+                }catch(err){
+                    console.log(err)
+                }
+            }else{
+                map.getSource('points').setData(json);
+            }
+        };
+        setPilotsLayer();
        
         </script>
     </body>
