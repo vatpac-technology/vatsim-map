@@ -47,7 +47,7 @@
         map.on('load', function () {
             // Add an image to use as a custom marker
             map.loadImage(
-            'http://localhost:8080/static/aircraft.png',
+            'http://vatpac.cycloptivity.net/static/aircraft.png',
             function (error, image) {
                 if (error) throw error;
                 map.addImage('custom-marker', image);
@@ -72,7 +72,7 @@
         var refresh = setInterval(setPilotsLayer, 15000);
         var drawn = false;
         async function setPilotsLayer () {
-            var response = await fetch('http://localhost:8080/v1/pilots');
+            var response = await fetch('http://vatpac.cycloptivity.net/v1/pilots');
             var json = await response.json();
             if(drawn == false){
                 try{
