@@ -3,8 +3,8 @@ import cors from 'cors';
 import {getPilots, clearCache} from './api.js';
 
 const app = express()
-const PORT = 8080;
-const HOST = '0.0.0.0';
+const PORT = process.env.PORT || 8080;
+const HOST = process.env.HOST || '0.0.0.0';
 
 var corsOptions = {
     origin: '*',

@@ -36,18 +36,41 @@
         <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
         <script>
+        const mapCenter = [134.9, -28.2];
+        const mapZoom = 3.2;
+        const styleLight = 'mapbox://styles/cycloptivity/ckrai7rg601cw18p5zu4ntq27';
+        const styleDark = 'mapbox://styles/cycloptivity/ckrsmmn0623yb17pew9y59lao';
         mapboxgl.accessToken = 'pk.eyJ1IjoiY3ljbG9wdGl2aXR5IiwiYSI6ImNqcDY0NnZnYzBmYjYzd284dzZudmdvZmUifQ.RyR4jd1HRggrbeZRvkv0xg';
+
         var map = new mapboxgl.Map({
-            container: 'map', // container ID
-            style: 'mapbox://styles/cycloptivity/ckrai7rg601cw18p5zu4ntq27', // style URL
-            center: [134.9, -28.2], // starting position [lng, lat]
-            zoom: 3.2 // starting zoom
+                container: 'map', // container ID
+                style: styleLight, // style URL
+                center: mapCenter, // starting position [lng, lat]
+                zoom:  mapZoom // starting zoom
         });
+
+        // Light / Dark switch
+        function findGetParameter(parameterName) {
+            var result = null,
+                tmp = [];
+            location.search
+                .substr(1)
+                .split("&")
+                .forEach(function (item) {
+                tmp = item.split("=");
+                if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
+                });
+            return result;
+        }        
+        var theme = findGetParameter('theme');
+        if(theme == 'dark'){
+            map.setStyle(styleDark);
+        }
              
         map.on('load', function () {
             // Add an image to use as a custom marker
             map.loadImage(
-            'http://vatpac.cycloptivity.net/static/aircraft.png',
+            `http://${window.location.hostname}:${window.location.port}/static/aircraft.png`,
             function (error, image) {
                 if (error) throw error;
                 map.addImage('custom-marker', image);
@@ -56,15 +79,49 @@
         });
 
         //options.localGeocoder Function? A function accepting the query string which performs local geocoding to supplement results from the Mapbox Geocoding API. Expected to return an Array of GeoJSON Features in the Carmen GeoJSON format.
+        function forwardGeocoder(query) {
+            // var response = await fetch(`http://${window.location.hostname}:${window.location.port}/v1/pilots`);
+            // var json = await response.json();
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                var json = JSON.parse(this.responseText);
+                            // console.log(json.features.length)
+                    var matchingFeatures = [];
+                    for (var i = 0; i < json.features.length; i++) {
+                        var feature = json.features[i];
+                        // Handle queries with different capitalization
+                        // than the source data by calling toLowerCase().
+                        if (
+                        feature.properties.pilot.callsign
+                        .toLowerCase()
+                        .search(query.toLowerCase()) !== -1
+                        ) {
+                        // Add a tree emoji as a prefix for custom
+                        // data results using carmen geojson format:
+                        // https://github.com/mapbox/carmen/blob/master/carmen-geojson.md
+                        feature['place_name'] = '🌲 ' + feature.properties.pilot.callsign;
+                        feature['center'] = feature.geometry.coordinates;
+                        matchingFeatures.push(feature);
+                        }
+                    }
+                    console.log(matchingFeatures)
+                    return matchingFeatures;
+                }
+            };
+            xmlhttp.open("GET", `http://${window.location.hostname}:${window.location.port}/v1/pilots`, false);
+            xmlhttp.send();
+        }
 
         // Add the search control to the map.
         map.addControl(
         new MapboxGeocoder({
-        accessToken: mapboxgl.accessToken,
-        mapboxgl: mapboxgl,
-        // options: {
-        //     localGeocoder
-        // }
+            accessToken: mapboxgl.accessToken,
+            mapboxgl: mapboxgl,
+            localGeocoder: forwardGeocoder,
+            localGeocoderOnly: true,
+            zoom: 14,
+            placeholder: 'Find aircraft'
         })
         );
 
@@ -72,13 +129,13 @@
         var refresh = setInterval(setPilotsLayer, 15000);
         var drawn = false;
         async function setPilotsLayer () {
-            var response = await fetch('http://vatpac.cycloptivity.net/v1/pilots');
+            var response = await fetch(`http://${window.location.hostname}:${window.location.port}/v1/pilots`);
             var json = await response.json();
             if(drawn == false){
                 try{
                     map.addSource('points', {
                         'type': 'geojson',
-                        'attribution': 'https://github.com/Kahn/vatsim-map',
+                        'attribution': '<a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>',
                         'data': json
                     });
                     // Add a symbol layer
@@ -111,7 +168,11 @@
                     console.log(err)
                 }
             }else{
-                map.getSource('points').setData(json);
+                try{
+                    map.getSource('points').setData(json);
+                }catch(err){
+                    console.log(err)
+                }
             }
         };
         setPilotsLayer();
