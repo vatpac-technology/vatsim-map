@@ -18,8 +18,8 @@
             .marker {
                 background-image: url('/static/aircraft.png');
                 background-size: cover;
-                width: 5px;
-                height: 5px;
+                width: 1px;
+                height: 1px;
                 border-radius: 0%;
                 cursor: pointer;
             }
@@ -37,7 +37,7 @@
         <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
         <script>
         const mapCenter = [134.9, -28.2];
-        const mapZoom = 3.2;
+        const mapZoom = 4;
         const styleLight = 'mapbox://styles/cycloptivity/ckrai7rg601cw18p5zu4ntq27';
         const styleDark = 'mapbox://styles/cycloptivity/ckrsmmn0623yb17pew9y59lao';
         mapboxgl.accessToken = 'pk.eyJ1IjoiY3ljbG9wdGl2aXR5IiwiYSI6ImNqcDY0NnZnYzBmYjYzd284dzZudmdvZmUifQ.RyR4jd1HRggrbeZRvkv0xg';
@@ -67,17 +67,6 @@
             map.setStyle(styleDark);
         }
              
-        map.on('load', function () {
-            // Add an image to use as a custom marker
-            map.loadImage(
-            `http://${window.location.hostname}:${window.location.port}/static/aircraft.png`,
-            function (error, image) {
-                if (error) throw error;
-                map.addImage('custom-marker', image);
-            }
-            );
-        });
-
         //options.localGeocoder Function? A function accepting the query string which performs local geocoding to supplement results from the Mapbox Geocoding API. Expected to return an Array of GeoJSON Features in the Carmen GeoJSON format.
         function forwardGeocoder(query) {
             // var response = await fetch(`http://${window.location.hostname}:${window.location.port}/v1/pilots`);
@@ -126,6 +115,41 @@
         );
 
 
+        async function getATCSectors() {
+            try{
+                var response = await fetch(`http://${window.location.hostname}:${window.location.port}/v1/atc/sectors`);
+                var json = await response.json();
+                map.addSource('sectors', {
+                            'type': 'geojson',
+                            'data': json
+                        });
+                // Add a new layer to visualize the polygon.
+                map.addLayer({
+                'id': 'sectors',
+                'type': 'fill',
+                'source': 'sectors', // reference the data source
+                'layout': {},
+                'paint': {
+                'fill-color': '#0080ff', // blue color fill
+                'fill-opacity': 0.1
+                }
+                });
+                // Add a black outline around the polygon.
+                map.addLayer({
+                'id': 'outline',
+                'type': 'line',
+                'source': 'sectors',
+                'layout': {},
+                'paint': {
+                'line-color': '#000',
+                'line-width': 1
+                }
+                });
+            }catch(err){
+                throw Error(err);
+            }
+        };
+
         var refresh = setInterval(setPilotsLayer, 15000);
         var drawn = false;
         async function setPilotsLayer () {
@@ -133,25 +157,23 @@
             var json = await response.json();
             if(drawn == false){
                 try{
-                    map.addSource('points', {
+                    map.addSource('aircraft', {
                         'type': 'geojson',
                         'attribution': '<a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>',
                         'data': json
                     });
                     // Add a symbol layer
                     map.addLayer({
-                    'id': 'points',
+                    'id': 'aircraft',
                     'type': 'symbol',
-                    'source': 'points',
+                    'source': 'aircraft',
                     'layout': {
                         'icon-image': 'custom-marker',
-                        'icon-size': 0.1,
+                        'icon-size': 0.08,
                         'icon-rotate': [ 'get', 'heading', ['object', ['get', 'pilot']]],
-                        'icon-allow-overlap': false,
-                        'icon-ignore-placement': false,
-                        // get the title name from the source's "title" property
-                        'text-field': [
-                            'format', ['get', 'callsign', ['object', ['get', 'pilot']]], { 'text-color': '#000000'}],
+                        'icon-allow-overlap': true,
+                        'icon-ignore-placement': true,
+                        'text-field': ['format', ['get', 'callsign', ['object', ['get', 'pilot']]], { 'text-color': '#000000'}],
                         'text-font': [
                             'Open Sans Semibold',
                             'Arial Unicode MS Bold'
@@ -159,8 +181,8 @@
                         'text-offset': [1, 1],
                         // 'text-anchor': 'bottom',
                         'text-variable-anchor': ["top", "bottom", "left"],
-                        'text-allow-overlap': false,
-                        'text-ignore-placement': false
+                        'text-allow-overlap': true,
+                        'text-ignore-placement': true
                     }
                     });
                     drawn = true;
@@ -169,13 +191,26 @@
                 }
             }else{
                 try{
-                    map.getSource('points').setData(json);
+                    map.getSource('aircraft').setData(json);
                 }catch(err){
                     console.log(err)
                 }
             }
         };
-        setPilotsLayer();
+
+        map.on('load', function () {
+            // Add an image to use as a custom marker
+            map.loadImage(
+            `http://${window.location.hostname}:${window.location.port}/static/aircraft.png`,
+            function (error, image) {
+                if (error) throw error;
+                map.addImage('custom-marker', image);
+            }
+            );
+
+            getATCSectors();
+            setPilotsLayer();
+        });
        
         </script>
     </body>

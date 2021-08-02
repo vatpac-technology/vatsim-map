@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
-import {getPilots, clearCache} from './api.js';
+import { clearCache } from './client.js';
+import {getPilots} from './pilots.js';
+import { getATCSectors } from './atc.js';
 
 const app = express()
 const PORT = process.env.PORT || 8080;
@@ -22,6 +24,15 @@ app.get('/v1/pilots', cors(), async (req, res) => {
     }
 });
 
+app.get('/v1/atc/sectors', cors(), async (req, res) => {
+  var sectors = await getATCSectors();
+  if(sectors == false){
+    res.sendStatus(500);
+  }else{
+    res.send(sectors)
+  }
+});
+
 app.get('/v1/cache/clear', cors(), (req, res) => {
   clearCache();
   return res.sendStatus(200);
@@ -32,3 +43,4 @@ console.log(`Running on http://${HOST}:${PORT}`);
 
 // Warm cache
 getPilots();
+getATCSectors();
