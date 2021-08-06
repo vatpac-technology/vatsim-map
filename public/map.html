@@ -146,13 +146,13 @@
                 'line-width': 1
                 }
                 });
-                // Add sector labels
-                json.features.forEach(function(sector){
-                    console.log(sector)
-                    var marker = new mapboxgl.Marker()
-                    .setLngLat(turf.center({geojson: sector}))
-                    .addTo(map);
-                });
+                // // Add sector labels
+                // json.features.forEach(function(sector){
+                //     console.log(sector)
+                //     var marker = new mapboxgl.Marker()
+                //     .setLngLat(turf.center({geojson: sector}))
+                //     .addTo(map);
+                // });
                 
             }catch(err){
                 throw Error(err);
