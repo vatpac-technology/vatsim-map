@@ -15,7 +15,7 @@
               width: 100%;
             }
 
-            .marker {
+            .aircraft {
                 background-image: url('/static/aircraft.png');
                 background-size: cover;
                 width: 1px;
@@ -27,6 +27,7 @@
     </head>
     <body>
         <div id='map'></div>
+        <script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
         <!-- Load the `mapbox-gl-geocoder` plugin. -->
         <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
         <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" type="text/css">
@@ -69,7 +70,7 @@
              
         //options.localGeocoder Function? A function accepting the query string which performs local geocoding to supplement results from the Mapbox Geocoding API. Expected to return an Array of GeoJSON Features in the Carmen GeoJSON format.
         function forwardGeocoder(query) {
-            // var response = await fetch(`http://${window.location.hostname}:${window.location.port}/v1/pilots`);
+            // var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/pilots`);
             // var json = await response.json();
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function() {
@@ -98,7 +99,7 @@
                     return matchingFeatures;
                 }
             };
-            xmlhttp.open("GET", `http://${window.location.hostname}:${window.location.port}/v1/pilots`, false);
+            xmlhttp.open("GET", `${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/pilots`, false);
             xmlhttp.send();
         }
 
@@ -117,7 +118,7 @@
 
         async function getATCSectors() {
             try{
-                var response = await fetch(`http://${window.location.hostname}:${window.location.port}/v1/atc/sectors`);
+                var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/atc/sectors`);
                 var json = await response.json();
                 map.addSource('sectors', {
                             'type': 'geojson',
@@ -145,6 +146,14 @@
                 'line-width': 1
                 }
                 });
+                // Add sector labels
+                json.features.forEach(function(sector){
+                    console.log(sector)
+                    var marker = new mapboxgl.Marker()
+                    .setLngLat(turf.center({geojson: sector}))
+                    .addTo(map);
+                });
+                
             }catch(err){
                 throw Error(err);
             }
@@ -153,7 +162,7 @@
         var refresh = setInterval(setPilotsLayer, 15000);
         var drawn = false;
         async function setPilotsLayer () {
-            var response = await fetch(`http://${window.location.hostname}:${window.location.port}/v1/pilots`);
+            var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/pilots`);
             var json = await response.json();
             if(drawn == false){
                 try{
@@ -201,7 +210,7 @@
         map.on('load', function () {
             // Add an image to use as a custom marker
             map.loadImage(
-            `http://${window.location.hostname}:${window.location.port}/static/aircraft.png`,
+            `${window.location.protocol}//${window.location.hostname}:${window.location.port}/static/aircraft.png`,
             function (error, image) {
                 if (error) throw error;
                 map.addImage('custom-marker', image);
