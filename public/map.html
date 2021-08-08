@@ -155,9 +155,8 @@
         //     }
         // };
 
-        // var refresh = setInterval(setPilotMarkers, 1000);
-        // var drawn = false;
-
+        // var refreshMarkers = setInterval(setPilotMarkers, 1000);
+        // var markersArray = [];
         async function setPilotMarkers () {
             console.log(`setPilotMarkers`);
             var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/pilots`);
@@ -167,9 +166,15 @@
                 for (const marker of json.features) {
                     console.log(marker);
                     // Create popup for each Marker
-                    const popup = new mapboxgl.Popup({ offset: 25 }).setText(
-                    `Callsign: ${marker.properties.pilot.callsign} 
-                    Pilot: ${marker.properties.pilot.name}`
+                    const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
+                        `<ul>
+                        <li>Callsign: <strong>${marker.properties.pilot.callsign}</strong></li>
+                        <li>Pilot: ${marker.properties.pilot.name} (${marker.properties.pilot.cid})</li>
+                        <li>Heading: ${marker.properties.pilot.heading}</li>
+                        <li>Altitude: ${marker.properties.pilot.altitude}ft</li>
+                        <li>Groundspeed: ${marker.properties.pilot.groundspeed}kts</li>
+                        </ul>
+                        `
                     );
                     // Regex callsigns
                     // Anything using a VH callsign or three leters get GA
@@ -206,33 +211,48 @@
                     // });
                     
                     // Add markers to the map.
+                    try{
+                        markersArray.forEach(function(existingMarker){
+                            existingMarker.remove();
+                        });
+                    }catch(err){
+                        console.log(err);
+                    }
+                    
+                    // var m = new mapboxgl.Marker(el)
+                    //                     .setLngLat(marker.geometry.coordinates)
+                    //                     .setPopup(popup)
+                    //                     // Icon sets are rotated 45
+                    //                     .setRotation(marker.properties.pilot.heading - 45)
+                    //                     .addTo(map);
                     new mapboxgl.Marker(el)
-                    .setLngLat(marker.geometry.coordinates)
-                    .setPopup(popup)
-                    // Icon sets are rotated 45
-                    .setRotation(marker.properties.pilot.heading - 45)
-                    .addTo(map);
+                        .setLngLat(marker.geometry.coordinates)
+                        .setPopup(popup)
+                        // Icon sets are rotated 45
+                        .setRotation(marker.properties.pilot.heading - 45)
+                        .addTo(map);
+                    // m.push(markersArray);
 
                     // Layer approach
 
                     // Add a symbol layer
                     if(theme=="dark"){
-                        var mapLayer = map.getLayer('aircraft');
+                        var mapLayer = map.getLayer('aircraftMarkers');
 
                         if(typeof mapLayer !== 'undefined') {
                         // Remove map layer & source.
-                        map.removeLayer('aircraft').removeSource('aircraft');
+                        map.removeLayer('aircraftMarkers').removeSource('aircraftMarkersSource');
                         }
 
-                        map.addSource('aircraft', {
+                        map.addSource('aircraftMarkersSource', {
                             'type': 'geojson',
                             'attribution': '<a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>',
                             'data': json
                         });
                         map.addLayer({
-                        'id': 'aircraft',
+                        'id': 'aircraftMarkers',
                         'type': 'symbol',
-                        'source': 'aircraft',
+                        'source': 'aircraftMarkersSource',
                         'layout': {
                             // 'icon-image': 'custom-marker',
                             // 'icon-size': 0.08,
@@ -252,23 +272,23 @@
                         }
                         });
                     }else{
-                        var mapLayer = map.getLayer('aircraft');
+                        var mapLayer = map.getLayer('aircraftMarkers');
 
                         if(typeof mapLayer !== 'undefined') {
                         // Remove map layer & source.
-                        map.removeLayer('aircraft').removeSource('aircraft');
+                        map.removeLayer('aircraftMarkers').removeSource('aircraftMarkersSource');
                         }
 
-                        map.addSource('aircraft', {
+                        map.addSource('aircraftMarkersSource', {
                             'type': 'geojson',
                             'attribution': '<a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>',
                             'data': json
                         });
 
                         map.addLayer({
-                        'id': 'aircraft',
+                        'id': 'aircraftMarkers',
                         'type': 'symbol',
-                        'source': 'aircraft',
+                        'source': 'aircraftMarkersSource',
                         'layout': {
                             // 'icon-image': 'custom-marker',
                             // 'icon-size': 0.08,
@@ -295,86 +315,49 @@
             }
         };
 
+        // var refreshLayers = setInterval(setPilotsLayer, 1000);
+        var drawn = false;
         async function setPilotsLayer () {
             var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/pilots`);
             var json = await response.json();
             if(drawn == false){
                 try{
                     // Layer approach
-                    // map.addSource('aircraft', {
-                    //     'type': 'geojson',
-                    //     'attribution': '<a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>',
-                    //     'data': json
-                    // });
-                    // // Add a symbol layer
-                    // map.addLayer({
-                    // 'id': 'aircraft',
-                    // 'type': 'symbol',
-                    // 'source': 'aircraft',
-                    // 'layout': {
-                    //     'icon-image': 'custom-marker',
-                    //     'icon-size': 0.08,
-                    //     'icon-rotate': [ 'get', 'heading', ['object', ['get', 'pilot']]],
-                    //     'icon-allow-overlap': true,
-                    //     'icon-ignore-placement': true,
-                    //     'text-field': ['format', ['get', 'callsign', ['object', ['get', 'pilot']]], { 'text-color': '#000000'}],
-                    //     'text-font': [
-                    //         'Open Sans Semibold',
-                    //         'Arial Unicode MS Bold'
-                    //     ],
-                    //     'text-offset': [1, 1],
-                    //     // 'text-anchor': 'bottom',
-                    //     'text-variable-anchor': ["top", "bottom", "left"],
-                    //     'text-allow-overlap': true,
-                    //     'text-ignore-placement': true
-                    // }
-                    // });
-
-                    // Marker approach
-                    for (const marker of json.features) {
-                        // Regex callsigns
-                        // Anything using a VH callsign or three leters get GA
-                        const re = new RegExp('VH-[A-Z]{3}|VH[A-Z]{3}|[A-Z]{3}')
-                        const gaIcon = re.test(marker.callsign);
-                        console.log(`gaIcon re ${gaIcon}`);
-                        // Create a DOM element for each marker.
-                        const el = document.createElement('div');
-                        const width = 20;
-                        const height = 20;
-                        el.className = 'marker';
-                        if(gaIcon){
-                            if(theme=="dark"){
-                                el.style.backgroundImage = `url(${window.location.protocol}//${window.location.hostname}:${window.location.port}/static/flaticon.com/ga-dark.png)`;
-                            }else{
-                                el.style.backgroundImage = `url(${window.location.protocol}//${window.location.hostname}:${window.location.port}/static/flaticon.com/ga-light.png)`;
-                            }
-                        }else{
-                            if(theme=="dark"){
-                                el.style.backgroundImage = `url(${window.location.protocol}//${window.location.hostname}:${window.location.port}/static/fontawesome/jet-dark.png)`;
-                            }else{
-                                el.style.backgroundImage = `url(${window.location.protocol}//${window.location.hostname}:${window.location.port}/static/fontawesome/jet-light.png)`;
-                            }
-                        }
-                        el.style.width = `${width}px`;
-                        el.style.height = `${height}px`;
-                        el.style.backgroundSize = '100%';
-                        
-                        el.addEventListener('click', () => {
-                        window.alert(marker.properties.message);
-                        });
-                        
-                        // Add markers to the map.
-                        new mapboxgl.Marker(el)
-                        .setLngLat(marker.geometry.coordinates)
-                        .addTo(map);
+                    map.addSource('aircraftLayerSource', {
+                        'type': 'geojson',
+                        'attribution': '<a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>',
+                        'data': json
+                    });
+                    // Add a symbol layer
+                    map.addLayer({
+                    'id': 'aircraftLayer',
+                    'type': 'symbol',
+                    'source': 'aircraftLayerSource',
+                    'layout': {
+                        'icon-image': 'custom-marker',
+                        'icon-size': 0.08,
+                        'icon-rotate': [ 'get', 'heading', ['object', ['get', 'pilot']]],
+                        'icon-allow-overlap': true,
+                        'icon-ignore-placement': true,
+                        'text-field': ['format', ['get', 'callsign', ['object', ['get', 'pilot']]], { 'text-color': '#000000'}],
+                        'text-font': [
+                            'Open Sans Semibold',
+                            'Arial Unicode MS Bold'
+                        ],
+                        'text-offset': [1, 1],
+                        // 'text-anchor': 'bottom',
+                        'text-variable-anchor': ["top", "bottom", "left"],
+                        'text-allow-overlap': true,
+                        'text-ignore-placement': true
                     }
+                    });
                     drawn = true;
                 }catch(err){
                     console.log(err)
                 }
             }else{
                 try{
-                    // map.getSource('aircraft').setData(json);
+                    map.getSource('aircraftLayerSource').setData(json);
                 }catch(err){
                     console.log(err)
                 }
@@ -382,7 +365,7 @@
         };
 
         map.on('load', function () {
-            console.log(`map.on load`);
+            // console.log(`map.on load`);
             // Add an image to use as a custom marker
             // map.loadImage(
             // `${window.location.protocol}//${window.location.hostname}:${window.location.port}/static/fontawesome/jet-light.png`,
@@ -393,6 +376,7 @@
             // );
 
             // getATCSectors();
+            setPilotsLayer();
             setPilotMarkers();
         });
        
