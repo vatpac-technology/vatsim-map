@@ -40,6 +40,9 @@ Traffic heatmap (DB needed)
 CC BY-SA 3.0
 https://commons.wikimedia.org/wiki/File:Plane_font_awesome.svg 
 
+public/flaticon.com/ga-*.png
+<div>Icons made by <a href="https://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
+
 ## Theme
 
 Green 33cc99 A10
@@ -55,3 +58,5 @@ https://docs.mapbox.com/mapbox-gl-js/example/forward-geocode-custom-data/
 
 Progressive taxi? / taxi markup for pilot assist
 https://docs.mapbox.com/mapbox-gl-js/example/measure/
+
+https://docs.mapbox.com/mapbox-gl-js/example/set-popup/

@@ -1,0 +1,47 @@
+<h1 class="title">Traffic in VATPAC airspace</h1>
+<div id="vatsim-map-iframe"></div>
+<script type="application/javascript">
+    console.log('vatsim-map');
+    
+    const targetNode = document.documentElement;
+    const config = { attributes: true, childList: false, subtree: false };
+
+    const callback = function(mutationsList, observer) {
+        console.log("MutationObserver");
+        // Use traditional 'for loops' for IE 11
+        for(const mutation of mutationsList) {
+            if (mutation.type === 'attributes') {
+                    if(mutation.attributeName === "class") {
+                    console.log(`theme observer: ${mutation.target.className}`);
+                    if(mutation.target.className === "theme--dark"){
+                        setTheme("dark");
+                    }else{
+                        
+                        setTheme("light");
+                    }
+                }
+            }
+        }
+    };
+
+    var theme = "false";
+    function setTheme(theme){
+        console.log('setTheme')
+        var div = document.getElementById('vatsim-map-iframe');
+        if(theme == "dark"){
+            console.log(theme);
+            div.innerHTML = '<iframe src="https://vatpac.cycloptivity.net/static/map.html?theme=dark" name="vatsim-map" id="vatsim-map__dark" scrolling="no" frameborder="0" width="100%" height="500px"></iframe>';
+        }
+
+        if(theme == "light"){
+            console.log(theme);
+            div.innerHTML = '<iframe src="https://vatpac.cycloptivity.net/static/map.html?theme=light" name="vatsim-map" id="vatsim-map__dark" scrolling="no" frameborder="0" width="100%" height="500px"></iframe>';
+        }
+    };
+
+    setTheme("light");
+    const observer = new MutationObserver(callback);
+    observer.observe(targetNode, config);
+
+
+</script>
