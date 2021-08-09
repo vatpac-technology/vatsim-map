@@ -16,8 +16,21 @@
               width: 100%;
             }
 
-            .mapboxgl-popup {
-            max-width: 200px;
+            .mapboxgl-popup-content {
+            width: fit-content;
+            }
+
+            pre, pre code {
+                font-size: 8pt;
+                line-height: 1.4;
+            }
+
+            pre {
+                padding-left: 0;
+            }
+
+            #text {
+                padding-left: 0;
             }
           </style>
     </head>
@@ -38,6 +51,10 @@
         const styleLight = 'mapbox://styles/cycloptivity/ckrai7rg601cw18p5zu4ntq27';
         const styleDark = 'mapbox://styles/cycloptivity/ckrsmmn0623yb17pew9y59lao';
         mapboxgl.accessToken = 'pk.eyJ1IjoiY3ljbG9wdGl2aXR5IiwiYSI6ImNqcDY0NnZnYzBmYjYzd284dzZudmdvZmUifQ.RyR4jd1HRggrbeZRvkv0xg';
+        // Global to share JSON between functions
+        // var pilots = getPilots();
+        // pilots = setInterval(getPilots(),15000);
+        
 
         var map = new mapboxgl.Map({
                 container: 'map', // container ID
@@ -63,6 +80,12 @@
         if(theme == 'dark'){
             map.setStyle(styleDark);
         }
+
+        async function getPilots() {
+            var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/pilots`);
+            var json = await response.json();
+            return json;
+        };
              
         // //options.localGeocoder Function? A function accepting the query string which performs local geocoding to supplement results from the Mapbox Geocoding API. Expected to return an Array of GeoJSON Features in the Carmen GeoJSON format.
         // function forwardGeocoder(query) {
@@ -155,27 +178,130 @@
         //     }
         // };
 
+        function formatCodeString(string, length){
+            const re = (/(\w+\/\w+)|(\w+)/g)
+            var resString = '';
+            try{
+                var matches = [...string.matchAll(re)];
+                const lineLen = length;
+                var count = 1;
+                for (const match of matches) {
+                    console.log(match[0]);
+                    if(count < lineLen){
+                        if(resString == "") {
+                            resString = match[0];
+                            count++;
+                        }else{
+                            resString = resString + ' ' + match[0];
+                            count++;
+                        }
+                    }else{
+                        resString = resString + ' ' +  match[0] + '\n    ';
+                        count = 0;
+                    }
+                }
+                resString.replace(/\n+$/, "");
+                return resString;
+            }catch(err){
+                console.log(err)
+            };
+        }
+
+        function formatTypeString(string){
+            try{
+                var slash = string.split('/');
+                var hyphen = slash[1].split('-')
+
+                // FAA types are not wakes.
+                var wake = (hyphen[0] != "S" || hyphen[0] != "H" || hyphen[0] != "M" || hyphen[0] != "L" ? "NIL" : hyphen[0]);
+                var equipment = (hyphen[1] == undefined ? "NIL" : hyphen[1]);
+                return [slash[0],wake , equipment];
+            }catch(err){
+                if(err instanceof TypeError){
+                    // Something failed to parse - throw it back in the aircraft string
+                    return [string, "NIL", "NIL"];
+                }else{
+                    console.log(`Failed parsing formatTypeString` + err)
+                }
+            }
+        }
+
+        function formatAltString(string){
+            const transistionAltitudeThousands = 100;
+            var alt = 0;
+            var fl = string.split('FL')
+            alt = (fl[1] == undefined ? fl[0] : fl[1]);
+            alt = alt/100; // 33000 -> 330, 1000 -> 10, 340 -> 3.4
+            // Altitudes less than 500ft are probably not legal anyway (lets assume no one on VATSIM has LL approval), more likely they entered their FPL alt in FL. Fix the dumb here. PS: Sorry CONC
+            if(alt <= 5){
+                alt = alt * 100;
+            }
+            if (alt == 100){
+                return 'A100';
+            }else{
+                return (alt <= transistionAltitudeThousands ? 'A0'+alt : 'F'+alt);
+            };
+        };
+
         // var refreshMarkers = setInterval(setPilotMarkers, 1000);
         // var markersArray = [];
         async function setPilotMarkers () {
+            let popup;
             console.log(`setPilotMarkers`);
-            var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/pilots`);
-            var json = await response.json();
+            json = await getPilots();
             try{
                 // Marker approach
                 for (const marker of json.features) {
                     console.log(marker);
                     // Create popup for each Marker
-                    const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
-                        `<ul>
-                        <li>Callsign: <strong>${marker.properties.pilot.callsign}</strong></li>
-                        <li>Pilot: ${marker.properties.pilot.name} (${marker.properties.pilot.cid})</li>
-                        <li>Heading: ${marker.properties.pilot.heading}</li>
-                        <li>Altitude: ${marker.properties.pilot.altitude}ft</li>
-                        <li>Groundspeed: ${marker.properties.pilot.groundspeed}kts</li>
-                        </ul>
-                        `
-                    );
+
+                    if(marker.properties.pilot.flight_plan != undefined){
+                    // Flight plan exists
+                    var flightRules = (marker.properties.pilot.flight_plan.flight_rules == "I" ? "IFR" : "VFR");
+                    var [aircraft, wake, equipment ] = formatTypeString(marker.properties.pilot.flight_plan.aircraft);
+                    
+// Yeehaa tabs in IDE == tabs in pre. Fuck you CSS
+popup = new mapboxgl.Popup({ offset: 0 }).setHTML(
+`
+<div id="popup-content">
+<p><strong>Pilot details</strong><br />
+Callsign: <a href="https://stats.vatsim.net/search/${marker.properties.pilot.callsign}" target="_blank"><strong>${marker.properties.pilot.callsign}</strong></a> 
+Heading: <strong>${marker.properties.pilot.heading}T</strong> 
+Altitude: <strong>${marker.properties.pilot.altitude}ft</strong> 
+Groundspeed: <strong>${marker.properties.pilot.groundspeed}kts</strong> <br />
+Pilot: ${marker.properties.pilot.name} (<a href="https://stats.vatsim.net/stats/${marker.properties.pilot.cid}" target="_blank">${marker.properties.pilot.cid}</a>)<br />
+</p>
+
+<strong>Flight plan</strong>
+<pre class="flightplan"><code>
+ID(7): ${marker.properties.pilot.callsign} RULES(8a): ${flightRules || 'NONE'} 
+TYPE(9): ${aircraft} WAKE: ${wake} EQPT(10): ${equipment || 'NONE'}
+DEP(13): ${marker.properties.pilot.flight_plan.departure} EOBT: ${marker.properties.pilot.flight_plan.deptime} CRZ TAS (15): ${marker.properties.pilot.flight_plan.cruise_tas} CRZ ALT: ${formatAltString(marker.properties.pilot.flight_plan.altitude)} DEST(16): ${marker.properties.pilot.flight_plan.arrival} EET: ${marker.properties.pilot.flight_plan.enroute_time} ALTN: ${(marker.properties.pilot.flight_plan.alternate == undefined || marker.properties.pilot.flight_plan.alternate == "" ? "NONE" : marker.properties.pilot.flight_plan.alternate)}
+RTE: ${formatCodeString(marker.properties.pilot.flight_plan.route, 5)}
+EFOB(19): ${marker.properties.pilot.flight_plan.fuel_time}
+RMK: ${formatCodeString(marker.properties.pilot.flight_plan.remarks, 3)}
+ 
+</code></pre>
+</div>
+`
+);
+                    }else{
+                    // No flightplan for the pilot.
+                    popup = new mapboxgl.Popup({ offset: 0 }).setHTML(
+                    `
+                    <div id="popup-content">
+                    <strong>Pilot details</strong>
+                    <ul>
+                    <li>Callsign: <a href="https://stats.vatsim.net/search/${marker.properties.pilot.callsign}" target="_blank"><strong>${marker.properties.pilot.callsign}</strong></a></li>
+                    <li>Pilot: ${marker.properties.pilot.name} (<a href="https://stats.vatsim.net/stats/${marker.properties.pilot.cid}" target="_blank">${marker.properties.pilot.cid}</a>)</li>
+                    <li>Heading: ${marker.properties.pilot.heading}</li>
+                    <li>Altitude: ${marker.properties.pilot.altitude}ft</li>
+                    <li>Groundspeed: ${marker.properties.pilot.groundspeed}kts</li>
+                    </ul>
+                    <strong>Flight plan not filed.</strong>
+                    `);
+                    }
+                    
                     // Regex callsigns
                     // Anything using a VH callsign or three leters get GA
                     const re = new RegExp(/^VH-[A-Z]{3}$|^VH[A-Z]{3}$|^[A-Z]{3}$/);
@@ -210,14 +336,14 @@
                     // window.alert(marker.properties.message);
                     // });
                     
-                    // Add markers to the map.
-                    try{
-                        markersArray.forEach(function(existingMarker){
-                            existingMarker.remove();
-                        });
-                    }catch(err){
-                        console.log(err);
-                    }
+                    // // Add markers to the map.
+                    // try{
+                    //     markersArray.forEach(function(existingMarker){
+                    //         existingMarker.remove();
+                    //     });
+                    // }catch(err){
+                    //     console.log(err);
+                    // }
                     
                     // var m = new mapboxgl.Marker(el)
                     //                     .setLngLat(marker.geometry.coordinates)
@@ -236,6 +362,7 @@
                     // Layer approach
 
                     // Add a symbol layer
+                    console.log(`Layer theme ${theme}`)
                     if(theme=="dark"){
                         var mapLayer = map.getLayer('aircraftMarkers');
 
@@ -259,7 +386,7 @@
                             // 'icon-rotate': [ 'get', 'heading', ['object', ['get', 'pilot']]],
                             // 'icon-allow-overlap': true,
                             // 'icon-ignore-placement': true,
-                            'text-field': ['format', ['get', 'callsign', ['object', ['get', 'pilot']]], { 'text-color': '#FFF'}],
+                            'text-field': ['format', ['get', 'callsign', ['object', ['get', 'pilot']]], { 'text-color': '#FFFFFF'}],
                             'text-font': [
                                 'Open Sans Semibold',
                                 'Arial Unicode MS Bold'
@@ -295,7 +422,7 @@
                             // 'icon-rotate': [ 'get', 'heading', ['object', ['get', 'pilot']]],
                             // 'icon-allow-overlap': true,
                             // 'icon-ignore-placement': true,
-                            'text-field': ['format', ['get', 'callsign', ['object', ['get', 'pilot']]], { 'text-color': '#000'}],
+                            'text-field': ['format', ['get', 'callsign', ['object', ['get', 'pilot']]], { 'text-color': '#000000'}],
                             'text-font': [
                                 'Open Sans Semibold',
                                 'Arial Unicode MS Bold'
@@ -318,8 +445,7 @@
         // var refreshLayers = setInterval(setPilotsLayer, 1000);
         var drawn = false;
         async function setPilotsLayer () {
-            var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/pilots`);
-            var json = await response.json();
+            json = await getPilots();
             if(drawn == false){
                 try{
                     // Layer approach

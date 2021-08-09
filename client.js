@@ -1,12 +1,14 @@
 import NodeCache from 'node-cache';
-import fetch from 'node-fetch';
+import fetch from '@adobe/node-fetch-retry';
 import { xml2js } from 'xml-js';
 import dms2dec from 'dms2dec';
 import { lineToPolygon, lineString } from '@turf/turf';
 import bunyan from 'bunyan';
+import { FetchError } from 'node-fetch';
 
-var log = bunyan.createLogger({name: "vatsim-map"})
+var log = bunyan.createLogger({name: "vatsim-map", level: 30})
 const cache = new NodeCache( { stdTTL: 15, checkperiod: 30 } );
+const userAgent = "User-Agent: vatsim-map / 0.0.1 https://github.com/Kahn/vatsim-map"
 
 /**
  * @typedef {Object} LineObj
@@ -21,32 +23,66 @@ export function clearCache(){
     return true;
 }
 
-function checkHTTPStatus(res) {
-    if (res.ok) { // res.status >= 200 && res.status < 300
-        return res;
-    } else {
-        throw HTTPError(res.statusText);
-    }
-}
-
 export async function getVatsimData (url) {
-    var data = cache.get("vatsimData");
-    if (data == undefined) {
-        const res = await fetch(url)
-            .then(checkHTTPStatus)
-            .then(res => res.json())
-            .then( data => {
-                return data;
-            })
-            .catch(err => log.error(err));
-        data = res;
+    var ttlMs = cache.getTtl(url);
+    let data;
+    // VATSIM data is refreshed every 15s. Check 10s out from expiry.
+    if (ttlMs == undefined || ttlMs - Date.now() <= 10000) {
+        try{
+            // Download fresh VATSIM data
+            if(ttlMs == undefined){
+                // If there is nothing cached - retry forever.
+                const res = await fetch(url, {
+                    retryOptions: {
+                        retryMaxDuration: 30000, // Max 30s retrying
+                        retryInitialDelay: 1000, // 1s initial wait
+                        retryBackoff: 500 // 0.5s backoff
+                    },
+                    headers: {
+                        'User-Agent': userAgent
+                    }
+                })
+                .then(res => res.json())
+                .then( data => {
+                    return data;
+                })
+                log.trace({res: res});
+                data = res;
+            }else{
+                // If there is an old cache, timeout quickly.
+                const res = await fetch(url, {
+                    retryOptions: {
+                        retryMaxDuration: 2000,
+                        retryInitialDelay: 500,
+                        retryBackoff: 1.0 // no backoff
+                    },
+                    headers: {
+                        'User-Agent': userAgent
+                    }
+                })
+                .then(res => res.json())
+                .then( data => {
+                    return data;
+                })
+                log.trace({res: res});
+                data = res;
+            }
         log.info({
             cache: 'set',
             url: url,
             keys: Object.keys(data).length
         })
-        cache.set("vatsimData", data, 15);
+        cache.set(url, data, 30);
+        }catch(err){
+            if ( err instanceof FetchError) {
+                // Failed to download - load from cache
+                data = cache.get(url);
+            } else {
+                log.error(err);
+            }
+        };
     }else{
+        data = cache.get(url);
         log.info({
             cache: 'get',
             url: url,
@@ -60,7 +96,6 @@ export async function getVatsimAFV (url) {
     var data = cache.get("vatsimAFV");
     if (data == undefined) {
         const res = await fetch(url)
-            .then(checkHTTPStatus)
             .then(res => res.json())
             .then( data => {
                 return data;
@@ -90,24 +125,69 @@ export async function getVatsimAFV (url) {
  */
 export async function getLineFeatures (url) {
     // Extract vatSys polys into object
-    var data = cache.get(url);
-    if (data == undefined) {
+    var ttlMs = cache.getTtl(url);
+    let data;
+    // vatSys data is refreshed daily. Check 2 minutes out from expiry.
+    if (ttlMs == undefined || ttlMs - Date.now() <= 120000) {
         try{
-            // Download and parse XML
-            const res = await fetch(url)
-            .then(checkHTTPStatus)
-            .then(res => res.text())
-            .then( data => {
-                return data;
-            })
-            .catch(err => log.error(err));
-            data = await xml2js(res, {compact: true, spaces: 4});
+            // Download fresh vatSys data
+            if(ttlMs == undefined){
+                log.warn({
+                    cache: 'miss',
+                    url: url
+                })
+                // If there is nothing cached - retry forever.
+                const res = await fetch(url, {
+                    retryOptions: {
+                        retryMaxDuration: 30000, // Max 30s retrying
+                        retryInitialDelay: 1000, // 1s initial wait
+                        retryBackoff: 500 // 0.5s backoff
+                    },
+                    headers: {
+                        'User-Agent': userAgent
+                    }
+                })
+                .then(res => res.text())
+                .then( data => {
+                    return data;
+                })
+                log.trace({res: res});
+                data = await xml2js(res, {compact: true, spaces: 4});
+            }else{
+                // If there is an old cache, timeout quickly.
+                log.info({
+                    cache: 'hit',
+                    url: url,
+                    msg: 'near expiry'
+                })
+                const res = await fetch(url, {
+                    retryOptions: {
+                        retryMaxDuration: 2000,
+                        retryInitialDelay: 500,
+                        retryBackoff: 1.0 // no backoff
+                    },
+                    headers: {
+                        'User-Agent': userAgent
+                    }
+                })
+                .then(res => res.text())
+                .then( data => {
+                    return data;
+                })
+                log.trace({res: res});
+                data = await xml2js(res, {compact: true, spaces: 4});
+            }
         }catch(err){
-            throw Error(err);
-        }
-
+            if ( err instanceof FetchError) {
+                // Failed to download - load from cache
+                data = cache.get(url);
+            } else {
+                log.error(err);
+            }
+        };
+        
+        log.trace({data: data});
         var features = xmlToFeatures(data);
-
         log.info({
             cache: 'set',
             url: url,
@@ -116,6 +196,7 @@ export async function getLineFeatures (url) {
         cache.set(url, features, 86400);
         return features;
     }else{
+        data = cache.get(url);
         log.info({
             cache: 'get',
             url: url,
