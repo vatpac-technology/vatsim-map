@@ -1,5 +1,7 @@
 ## TODO
 
+* Instrument API response times and request times from VATSIM to track down loading delays
+
 * Show ATC polys and state from controllers API
 ** Add a turf function for centerOfMass to get ATC sector labels
 
