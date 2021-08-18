@@ -23,6 +23,12 @@ export function clearCache(){
     return true;
 }
 
+export function cacheStats(){
+    var stats = cache.getStats();
+    log.info({stats: stats});
+    return stats;
+}
+
 export async function getVatsimData (url) {
     var ttlMs = cache.getTtl(url);
     let data;

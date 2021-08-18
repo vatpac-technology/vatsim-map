@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { clearCache } from './client.js';
+import { clearCache, cacheStats } from './client.js';
 import {getPilots} from './pilots.js';
 import { getATCSectors } from './atc.js';
 
@@ -38,9 +38,13 @@ app.get('/v1/cache/clear', cors(), (req, res) => {
   return res.sendStatus(200);
 });
 
+app.get('/v1/cache/stats', cors(), (req, res) => {
+  return res.send(cacheStats());
+});
+
 app.listen(PORT, HOST);
 console.log(`Running on http://${HOST}:${PORT}`);
 
 // Warm cache
 getPilots();
-getATCSectors();
+// getATCSectors();

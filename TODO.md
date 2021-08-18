@@ -1,5 +1,10 @@
 ## TODO
 
+### Feedback
+
+* Add FL and GS to labels aka datatag
+
+
 * Instrument API response times and request times from VATSIM to track down loading delays
 
 * Show ATC polys and state from controllers API
@@ -24,11 +29,11 @@
 * Switch icons between prop and jet based on callsign or type.
   Filter aircraft_type by types from https://vatstats.net/
 * Use nav API for progressive taxi or draw on ground map routes
+* Use GS and HDG to animate markers between refresh
 
 ### Tech debt
 
 * Retest the xmlToPoly client with a single Line XML file
-* Fail gracefully on vatsys dataset cache expiry
 
 ### Current stats
 In FIR now
@@ -62,3 +67,6 @@ Progressive taxi? / taxi markup for pilot assist
 https://docs.mapbox.com/mapbox-gl-js/example/measure/
 
 https://docs.mapbox.com/mapbox-gl-js/example/set-popup/
+
+Change markers on zoom level. Would require iterating markers
+https://docs.mapbox.com/mapbox-gl-js/example/updating-choropleth/
