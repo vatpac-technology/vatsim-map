@@ -1,4 +1,99 @@
 // jshint esversion:6
+// TODO - Sort out why webpack is failing
+// import { lightDetailedLayout, lightPaint, lightLayout, darkDetailedLayout, darkPaint, darkLayout } from "./map-styles";
+
+// Color palette
+const darkTextTheme = {
+    primaryText: '#FFF',
+    secondaryText: '#969696',
+    textHalo: '#000'
+}
+
+const lightTextTheme = {
+    primaryText: '#000',
+    secondaryText: '#646464',
+    textHalo: '#FFF'
+}
+
+const lightPaint = {
+    'text-color': lightTextTheme.primaryText,
+    'text-halo-color': lightTextTheme.textHalo,
+    'text-halo-width': 2
+}
+
+const darkPaint = {
+    'text-color': darkTextTheme.primaryText,
+    'text-halo-color': darkTextTheme.textHalo,
+    'text-halo-width': 0.1
+}
+
+const lightLayout = {
+    'text-field': ['format',
+        ['get', 'callsign', ['object', ['get', 'pilot']]], {}
+    ],
+    'text-font': [
+        'Open Sans Semibold',
+        'Arial Unicode MS Bold'
+    ],
+    'text-size': 10,
+    'text-offset': [1, 0],
+    'text-anchor': 'left',
+    'text-allow-overlap': false,
+    'text-ignore-placement': false
+}
+
+const lightDetailedLayout = {
+    'text-field': ['format',
+        ['get', 'callsign', ['object', ['get', 'pilot']]], {},
+        "\n", {},
+        ['get', 'tag_alt', ['object', ['get', 'pilot']]], { 'text-color': lightTextTheme.secondaryText },
+        " ", {},
+        ['get', 'tag_gs', ['object', ['get', 'pilot']]], { 'text-color': lightTextTheme.secondaryText }
+    ],
+    'text-font': [
+        'Open Sans Semibold',
+        'Arial Unicode MS Bold'
+    ],
+    'text-size': 10,
+    'text-offset': [1, 0],
+    'text-anchor': 'left',
+    'text-allow-overlap': false,
+    'text-ignore-placement': false
+}
+
+const darkLayout = {
+    'text-field': ['format',
+        ['get', 'callsign', ['object', ['get', 'pilot']]], {}
+    ],
+    'text-font': [
+        'Open Sans Semibold',
+        'Arial Unicode MS Bold'
+    ],
+    'text-size': 10,
+    'text-offset': [1, 0],
+    'text-anchor': 'left',
+    'text-allow-overlap': false,
+    'text-ignore-placement': false
+}
+
+const darkDetailedLayout = {
+    'text-field': ['format',
+        ['get', 'callsign', ['object', ['get', 'pilot']]], {},
+        "\n", {},
+        ['get', 'tag_alt', ['object', ['get', 'pilot']]], { 'text-color': darkTextTheme.secondaryText },
+        " ", {},
+        ['get', 'tag_gs', ['object', ['get', 'pilot']]], { 'text-color': darkTextTheme.secondaryText }
+    ],
+    'text-font': [
+        'Open Sans Semibold',
+        'Arial Unicode MS Bold'
+    ],
+    'text-size': 10,
+    'text-offset': [1, 0],
+    'text-anchor': 'left',
+    'text-allow-overlap': false,
+    'text-ignore-placement': false
+}
 
 // From https://dev.to/jsmccrumb/asynchronous-setinterval-4j69
 const asyncIntervals = [];
@@ -29,42 +124,29 @@ const clearAsyncInterval = (intervalIndex) => {
 
 const mapCenter = [134.9, -28.2];
 const mapZoom = 3;
-const styleLight = 'mapbox://styles/cycloptivity/ckrai7rg601cw18p5zu4ntq27';
-const styleDark = 'mapbox://styles/cycloptivity/ckrsmmn0623yb17pew9y59lao';
+
 mapboxgl.accessToken = 'pk.eyJ1IjoiY3ljbG9wdGl2aXR5IiwiYSI6ImNqcDY0NnZnYzBmYjYzd284dzZudmdvZmUifQ.RyR4jd1HRggrbeZRvkv0xg';
 var markers = [];
 var reload = true;
-var pilots = {};
-const redrawTimeoutMs = 15000;
-// Global to share JSON between functions
-// var pilots = getPilots();
-// pilots = setInterval(,15000);
+var redrawTimeoutMs = 5000;
+var pilots = false;
 
+const styleLight = 'mapbox://styles/cycloptivity/ckrai7rg601cw18p5zu4ntq27';
+const styleDark = 'mapbox://styles/cycloptivity/ckrsmmn0623yb17pew9y59lao';
 
 var map = new mapboxgl.Map({
         container: 'map', // container ID
         style: styleLight, // style URL
         center: mapCenter, // starting position [lng, lat]
-        zoom:  mapZoom // starting zoom
+        zoom:  mapZoom, // starting zoom
+        attributionControl: false
 });
-
-// disable map rotation using right click + drag
 map.dragRotate.disable();
-
-// disable map rotation using touch rotation gesture
 map.touchZoomRotate.disableRotation();
 
-// Add map controls      
-// document.getElementById('listing-group').addEventListener('change', (e) => {
-// const handler = e.target.id;
-// console.log(handler);
-// if (e.target.checked) {
-//     // setPilotMarkers(false);
-//     map[handler].enable();
-// } else {
-//     map[handler].disable();
-// }
-// });
+map.addControl(new mapboxgl.AttributionControl({
+    customAttribution: '<a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>'
+}))
 
 // Light / Dark switch
 function findGetParameter(parameterName) {
@@ -85,7 +167,13 @@ if(theme == 'dark'){
 }
 
 async function getPilots() {
-    var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/pilots`);
+    var dataApi = findGetParameter('dataApi');
+    if(dataApi != null){
+        var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/${dataApi}`);
+    }else{
+        var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/pilots`);
+    }
+
     var json = await response.json();
     pilots = json;
     return json;
@@ -95,21 +183,26 @@ async function getPilots() {
 function forwardGeocoder(query) {
     const matchingFeatures = [];
     for (const feature of pilots.features) {
-    // Handle queries with different capitalization
-    // than the source data by calling toLowerCase().
-    if (
-    feature.properties.pilot.callsign
-    .toLowerCase()
-    .includes(query.toLowerCase())
-    ) {
-    // Add a tree emoji as a prefix for custom
-    // data results using carmen geojson format:
-    // https://github.com/mapbox/carmen/blob/master/carmen-geojson.md
-    feature['place_name'] = `${feature.properties.pilot.callsign}`;
-    feature['center'] = feature.geometry.coordinates;
-    // feature['place_type'] = ['park'];
-    matchingFeatures.push(feature);
-    }
+        // Search by callsign
+        if (
+        feature.properties.pilot.callsign
+        .toLowerCase()
+        .includes(query.toLowerCase())
+        ) {
+            feature['place_name'] = `${feature.properties.pilot.callsign}`;
+            feature['center'] = feature.geometry.coordinates;
+            matchingFeatures.push(feature);
+        }
+        // Search by pilot
+        if (
+            feature.properties.pilot.name
+            .toLowerCase()
+            .includes(query.toLowerCase())
+            ) {
+                feature['place_name'] = `${feature.properties.pilot.name}`;
+                feature['center'] = feature.geometry.coordinates;
+                matchingFeatures.push(feature);
+            }
     }
     return matchingFeatures;
 }
@@ -241,11 +334,10 @@ function formatAltString(string){
     };
 };
 
-async function updatePilotLabelsLayer () {
+async function updatePilotsLayer () {
     // Update labels layer
     try{
-        json = await getPilots();
-        map.getSource('aircraftMarkersSource').setData(json);
+        map.getSource('aircraftMarkersSource').setData(pilots);
     }catch(err){
         console.log(err);
     }
@@ -265,24 +357,8 @@ function setPilotsLayer() {
         'type': 'symbol',
         'source': 'aircraftMarkersSource',
         'minzoom': 4,
-        'layout': {
-            // 'icon-image': 'custom-marker',
-            // 'icon-size': 0.08,
-            // 'icon-rotate': [ 'get', 'heading', ['object', ['get', 'pilot']]],
-            // 'icon-allow-overlap': declutter,
-            // 'icon-ignore-placement': declutter,
-            'text-field': ['format', ['get', 'callsign', ['object', ['get', 'pilot']]], { 'text-color': '#FFFFFF'}],
-            'text-font': [
-                'Open Sans Semibold',
-                'Arial Unicode MS Bold'
-            ],
-            'text-size': 10,
-            'text-offset': [1, 1],
-            // 'text-anchor': 'bottom',
-            'text-variable-anchor': ["top", "bottom", "left"],
-            'text-allow-overlap': false,
-            'text-ignore-placement': false
-        }
+        'layout': lightDetailedLayout,
+        'paint': lightPaint
         });
     }else{
         var mapLayer = map.getLayer('aircraftLabels');
@@ -291,37 +367,20 @@ function setPilotsLayer() {
         // Remove map layer & source.
         map.removeLayer('aircraftLabels');
         }
-
+        // Callsign only
         map.addLayer({
         'id': 'aircraftLabels',
         'type': 'symbol',
         'source': 'aircraftMarkersSource',
         'minzoom': 4,
-        'layout': {
-            // 'icon-image': 'custom-marker',
-            // 'icon-size': 0.08,
-            // 'icon-rotate': [ 'get', 'heading', ['object', ['get', 'pilot']]],
-            // 'icon-allow-overlap': declutter,
-            // 'icon-ignore-placement': declutter,
-            'text-field': ['format', ['get', 'callsign', ['object', ['get', 'pilot']]], { 'text-color': '#000000'}],
-            'text-font': [
-                'Open Sans Semibold',
-                'Arial Unicode MS Bold'
-            ],
-            'text-size': 10,
-            'text-offset': [1, 1],
-            // 'text-anchor': 'bottom',
-            'text-variable-anchor': ["top", "bottom", "left"],
-            'text-allow-overlap': false,
-            'text-ignore-placement': false
-        }
+        'layout': darkDetailedLayout,
+        'paint': darkPaint
         });
     };
 }
 
 async function setPilotMarkers () {
     let popup;
-    var json = await getPilots();
     try{
         // Redraw markers if already set
         if (markers!==null) {
@@ -330,7 +389,7 @@ async function setPilotMarkers () {
             }
         };
 
-        for (const marker of json.features) {
+        for (const marker of pilots.features) {
 
             // Create popup for each Marker
             if(marker.properties.pilot.flight_plan != undefined){
@@ -386,9 +445,9 @@ async function setPilotMarkers () {
                 el.style.width = `12px`;
                 el.style.height = `12px`;
                 if(theme=="dark"){
-                    el.style.backgroundImage = `url(${window.location.protocol}//${window.location.hostname}:${window.location.port}/static/flaticon.com/ga-dark.png)`;
+                    el.style.backgroundImage = `url(${window.location.protocol}//${window.location.hostname}:${window.location.port}/static/flaticon.com/freepik/ga-dark.png)`;
                 }else{
-                    el.style.backgroundImage = `url(${window.location.protocol}//${window.location.hostname}:${window.location.port}/static/flaticon.com/ga-light.png)`;
+                    el.style.backgroundImage = `url(${window.location.protocol}//${window.location.hostname}:${window.location.port}/static/flaticon.com/freepik/ga-light.png)`;
                 }
             }else{
                 el.style.width = `15px`;
@@ -425,19 +484,25 @@ async function setPilotMarkers () {
     }
 };
 
+getPilots();
+
 map.on('load', function () {
-    // Create layer source
+
     map.addSource('aircraftMarkersSource', {
         'type': 'geojson',
-        'attribution': '<a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>',
         'data': null
     });
+
     setPilotsLayer();
+    setPilotMarkers();
+
+    // Main loop
     setAsyncInterval(async () => {
         const promise = new Promise((resolve) => {
             if(reload){
+                getPilots();
                 setPilotMarkers();
-                updatePilotLabelsLayer();
+                updatePilotsLayer();
             }else{
                 console.log('Reload inhibited')
             }

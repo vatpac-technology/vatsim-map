@@ -5,10 +5,13 @@ import dms2dec from 'dms2dec';
 import { lineToPolygon, lineString } from '@turf/turf';
 import bunyan from 'bunyan';
 import { FetchError } from 'node-fetch';
+import query_overpass from 'query-overpass';
+import config from 'config';
 
-var log = bunyan.createLogger({name: "vatsim-map", level: 30})
+var log = bunyan.createLogger({name: config.get('app.name'), level: config.get('app.log_level')});
+
 const cache = new NodeCache( { stdTTL: 15, checkperiod: 30 } );
-const userAgent = "User-Agent: vatsim-map / 0.0.1 https://github.com/Kahn/vatsim-map"
+const userAgent = `User-Agent: ${config.get('app.name')} / ${config.get('app.version')} ${config.get('app.url')}`
 
 /**
  * @typedef {Object} LineObj
@@ -28,6 +31,49 @@ export function cacheStats(){
     log.info({stats: stats});
     return stats;
 }
+
+export async function getOSMAerodromeData (areaName) {
+    var ttlMs = cache.getTtl(areaName);
+    let data;
+    if (ttlMs == undefined || ttlMs - Date.now() <= 120000) {
+        try{
+            data = await query_overpass(
+                `area["name"="${areaName}"]->.boundaryarea;
+                (
+                nwr(area.boundaryarea)["aeroway"="aerodrome"];
+                );
+                out body;
+                >;
+                out skel qt;`,
+                function(err, data){
+                    if(err){
+                        log.error(err);
+                    }else{
+                        log.info({
+                            cache: 'set',
+                            area: areaName,
+                            keys: Object.keys(data).length
+                        })
+                        cache.set(areaName, data, 86400);
+                    }
+                },
+                { overpassUrl: config.get('data.osm.overpassUrl') }
+            );
+
+        }catch(err){
+            log.error(`Failed quering overpass`);
+            log.error({err: err});
+        }
+    }else{
+        data = cache.get(areaName);
+        log.debug({
+            cache: 'get',
+            area: areaName,
+            keys: Object.keys(data).length
+        })
+    }
+    return data;
+};
 
 export async function getVatsimData (url) {
     var ttlMs = cache.getTtl(url);
@@ -89,7 +135,7 @@ export async function getVatsimData (url) {
         };
     }else{
         data = cache.get(url);
-        log.info({
+        log.debug({
             cache: 'get',
             url: url,
             keys: Object.keys(data).length
@@ -115,7 +161,7 @@ export async function getVatsimAFV (url) {
         });
         cache.set("vatsimAFV", data, 15);
     }else{
-        log.info({
+        log.debug({
             cache: 'get',
             url: url,
             keys: Object.keys(data).length
@@ -138,10 +184,6 @@ export async function getLineFeatures (url) {
         try{
             // Download fresh vatSys data
             if(ttlMs == undefined){
-                log.warn({
-                    cache: 'miss',
-                    url: url
-                })
                 // If there is nothing cached - retry forever.
                 const res = await fetch(url, {
                     retryOptions: {

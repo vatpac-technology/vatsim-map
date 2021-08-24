@@ -3,10 +3,11 @@ import cors from 'cors';
 import { clearCache, cacheStats } from './client.js';
 import {getPilots} from './pilots.js';
 import { getATCSectors } from './atc.js';
+import config from 'config';
 
 const app = express()
-const PORT = process.env.PORT || 8080;
-const HOST = process.env.HOST || '0.0.0.0';
+const PORT = config.get('app.http.port');
+const HOST = config.get('app.http.host');
 
 var corsOptions = {
     origin: '*',
@@ -14,6 +15,7 @@ var corsOptions = {
   }
 
 app.use('/static', express.static('public'));
+app.use('/testdata', express.static('data'));
 
 app.get('/v1/pilots', cors(), async (req, res) => {
     var pilots = await getPilots();

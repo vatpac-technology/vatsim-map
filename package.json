@@ -3,20 +3,24 @@
   "type": "module",
   "version": "0.0.1",
   "description": "Display VATSIM traffic on a map for a given set of FIRs",
-  "main": "index.js",
+  "private": true,
   "dependencies": {
     "@adobe/node-fetch-retry": "^1.1.1",
     "@turf/turf": "^6.5.0",
     "bunyan": "^1.8.15",
+    "config": "^3.3.6",
     "cors": "^2.8.5",
     "dms2dec": "^1.1.0",
     "express": "^4.17.1",
     "node-cache": "^5.1.2",
     "node-fetch": "^2.6.1",
+    "query-overpass": "^1.5.5",
     "xml-js": "^1.6.11"
   },
   "devDependencies": {
-    "jest": "^27.0.6"
+    "jest": "^27.0.6",
+    "webpack": "^5.51.1",
+    "webpack-cli": "^4.8.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

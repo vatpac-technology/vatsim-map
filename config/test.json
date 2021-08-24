@@ -1,0 +1,20 @@
+{
+    "urls": {
+        "vatsim": {
+            "data": "https://data.vatsim.net/v3/vatsim-data.json"
+        },
+        "vatsys": {
+            "fir_boundaries": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Maps/FIR_BOUNDARIES.xml"
+        }
+    },
+    "app": {
+        "name": "vatsim-map",
+        "version": "0.0.1",
+        "url": "https://github.com/Kahn/vatsim-map",
+        "log_level": 30,
+        "http": {
+            "host": "0.0.0.0",
+            "port": 8080
+        }
+    }
+}
