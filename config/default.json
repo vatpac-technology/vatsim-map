@@ -18,14 +18,34 @@
             "MELBOURNE_FIR",
             "NFFF-A",
             "NFFF-B"
-        ]
+        ],
+        "sectors": {
+            "standard": [
+                "BN-ARA_CTR",
+                "BN-DOS_CTR",
+                "BN-ISA_CTR",
+                "BN-MDE_CTR",
+                "BN-TBP_CTR",
+                "BN-TRT_CTR",
+                "ML-ASP_CTR",
+                "ML-BKE_CTR",
+                "ML-ESP_CTR",
+                "ML-ORE_CTR",
+                "ML-SNO_CTR",
+                "ML-TBD_CTR",
+                "ML-TAS_CTR",
+                "ML-WOL_CTR"
+            ]
+        }
     },
     "data": {
         "vatsim": {
             "dataUrl": "https://data.vatsim.net/v3/vatsim-data.json"
         },
         "vatsys": {
-            "fir_boundariesUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Maps/FIR_BOUNDARIES.xml"
+            "fir_boundariesUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Maps/FIR_BOUNDARIES.xml",
+            "volumesUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Volumes.xml",
+            "sectorsUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Sectors.xml"
         },
         "osm": {
             "overpassUrl": "https://overpass-api.de/api/interpreter",
