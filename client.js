@@ -177,7 +177,7 @@ export async function getVatsimAFV (url) {
  */
  export async function getXMLtoJS (url) {
     // Extract vatSys XML into object
-    var ttlMs = cache.getTtl(url);
+    var ttlMs = cache.getTtl(`getXMLtoJS-${url}`);
     let data;
     // vatSys data is refreshed daily. Check 2 minutes out from expiry.
     if (ttlMs == undefined || ttlMs - Date.now() <= 120000) {
@@ -240,10 +240,10 @@ export async function getVatsimAFV (url) {
             url: url,
             objs: data.length
         })
-        cache.set(url, data, 86400);
+        cache.set(`getXMLtoJS-${url}`, data, 86400);
         return data;
     }else{
-        data = cache.get(url);
+        data = cache.get(`getXMLtoJS-${url}`);
         log.info({
             cache: 'get',
             url: url,

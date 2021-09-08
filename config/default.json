@@ -45,10 +45,12 @@
         "vatsys": {
             "fir_boundariesUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Maps/FIR_BOUNDARIES.xml",
             "volumesUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Volumes.xml",
-            "sectorsUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Sectors.xml"
+            "sectorsUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Sectors.xml",
+            "coastlineUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Maps/COAST_ALL.xml",
+            "coloursUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Colours.xml"
         },
         "osm": {
-            "overpassUrl": "https://overpass-api.de/api/interpreter",
+            "overpassUrl": "https://localhost/api/interpreter",
             "aerodromesArea": "New South Wales"
         }
     }

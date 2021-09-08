@@ -30,7 +30,7 @@ const latlngdmsalt = new RegExp(/(?<latRef>[+-])(?<latD>[0-9]{2})(?<latM>[0-9]{2
 export function iso2dec(string){
     switch(true) {
         case latlngdmsalt.test(string):
-            log.info("Matched DMS ALT")
+            log.debug("Matched DMS ALT")
             var match = string.match(latlngdmsalt);
             var pos = {
                 latitude: [
@@ -49,7 +49,7 @@ export function iso2dec(string){
             var [ latitude, longitude ] = dms2dec(pos.latitude,pos.latRef,pos.longitude,pos.lonRef);
             return {latitude: latitude, longitude: longitude};
         case latlngdmalt.test(string):
-            log.info("Matched DM ALT")
+            log.debug("Matched DM ALT")
             var match = string.match(latlngdmalt);
             var pos = {
                 latitude: [
@@ -68,7 +68,7 @@ export function iso2dec(string){
             var [ latitude, longitude ] = dms2dec(pos.latitude,pos.latRef,pos.longitude,pos.lonRef);
             return {latitude: latitude, longitude: longitude};
         case latlngdalt.test(string):
-            log.info("Matched D ALT")
+            log.debug("Matched D ALT")
             var match = string.match(latlngdalt);
             var pos = {
                 latitude: [
@@ -87,7 +87,7 @@ export function iso2dec(string){
             var [ latitude, longitude ] = dms2dec(pos.latitude,pos.latRef,pos.longitude,pos.lonRef);
             return {latitude: latitude, longitude: longitude};
         case latlngdms.test(string):
-            log.info("Matched DMS")
+            log.debug("Matched DMS")
             var match = string.match(latlngdms);
             var pos = {
                 latitude: [
@@ -106,7 +106,7 @@ export function iso2dec(string){
             var [ latitude, longitude ] = dms2dec(pos.latitude,pos.latRef,pos.longitude,pos.lonRef);
             return {latitude: latitude, longitude: longitude};
         case latlngdm.test(string):
-            log.info("Matched DM")
+            log.debug("Matched DM")
             var match = string.match(latlngdm);
             var pos = {
                 latitude: [
@@ -125,7 +125,7 @@ export function iso2dec(string){
             var [ latitude, longitude ] = dms2dec(pos.latitude,pos.latRef,pos.longitude,pos.lonRef);
             return {latitude: latitude, longitude: longitude};
         case latlngd.test(string):
-            log.info("Matched D")
+            log.debug("Matched D")
             var match = string.match(latlngd);
             var pos = {
                 latitude: [
@@ -144,7 +144,7 @@ export function iso2dec(string){
             var [ latitude, longitude ] = dms2dec(pos.latitude,pos.latRef,pos.longitude,pos.lonRef);
             return {latitude: latitude, longitude: longitude};
         default:
-            log.info('iso2deg failed to match')
+            log.warn('iso2deg failed to match')
             return false;
     }
 };

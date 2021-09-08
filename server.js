@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { clearCache, cacheStats } from './client.js';
 import {getPilots} from './pilots.js';
-import { getATCSectors } from './atc.js';
+import { getATCSectors, getCoastline, getColours } from './atc.js';
 import config from 'config';
 
 const app = express()
@@ -15,6 +15,8 @@ var corsOptions = {
   }
 
 app.use('/static', express.static('public'));
+app.use('/favicon.ico', express.static('public/favicon.ico'));
+
 app.use('/testdata', express.static('data'));
 
 app.get('/v1/pilots', cors(), async (req, res) => {
@@ -27,11 +29,36 @@ app.get('/v1/pilots', cors(), async (req, res) => {
 });
 
 app.get('/v1/atc/sectors', cors(), async (req, res) => {
+  var standardOnly = (req.query.standardOnly == undefined ? false : req.query.standardOnly.toString());
   var sectors = await getATCSectors();
+  if (standardOnly == "true"){
+    sectors = sectors.filter(function(sector) {
+      return sector.standard_position===true;
+    });
+  }
+  // console.log(sectors);
   if(sectors == false){
     res.sendStatus(500);
   }else{
     res.send(sectors)
+  }
+});
+
+app.get('/v1/atc/coastline', cors(), async (req, res) => {
+  var data = await getCoastline();
+  if(data == false){
+    res.sendStatus(500);
+  }else{
+    res.send(data)
+  }
+});
+
+app.get('/v1/atc/colours', cors(), async (req, res) => {
+  var data = await getColours();
+  if(data == false){
+    res.sendStatus(500);
+  }else{
+    res.send(data)
   }
 });
 
