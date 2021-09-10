@@ -21,7 +21,7 @@ var log = bunyan.createLogger({name: config.get('app.name'), level: config.get('
 
 export async function getCoastline(){
     var coastline = await getLineFeatures(config.get("data.vatsys.coastlineUrl"));
-    return coastline;
+    return featureCollection(coastline);
 }
 
 export async function getColours(){

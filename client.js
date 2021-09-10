@@ -371,7 +371,7 @@ function xmlToFeatures (data) {
                   }, lines);
                 // Create GeoJSON poly
                 if(lines.length > 0){
-                    polys.push(lineToPolygon(lineString(lines),{mutate: true, properties: obj._attributes }));
+                    polys.push(lineString(lines,{ properties: obj._attributes }));
                 }
             })
         }catch(err){
