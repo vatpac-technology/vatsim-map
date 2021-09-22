@@ -23,8 +23,6 @@ function mergeSectors(sector, sectors, json){
             var poly = mergeBoundaries(sector);
             sectorVolumes.push(poly);
         });
-        console.log(`rs array ${sector.Name}`)
-        console.log(sectorVolumes);
         // Add self and union all sector volumes
         sectorVolumes.push(mergeBoundaries(sector));
         var mergedPoly = unionArray(sectorVolumes);
@@ -40,8 +38,6 @@ function mergeSectors(sector, sectors, json){
 
 function mergeBoundaries(sector){
     var features = sector.volumes.map((volume) => volume.Boundaries.map((boundary) => boundary)).flat();
-    console.log(sector);
-    console.log(features);
     if(features.length > 1){
         var union = unionArray(features);
         union.properties = { ...sector };
@@ -59,18 +55,25 @@ function mergeBoundaries(sector){
 }
 
 function unionArray(array){
+        const bufferKm = 0.1;
         var featureCollection = turf.featureCollection(array);
         if (featureCollection.length === 0) {
             return null
         }
         // buffer is a dirty dirty hack to close up some holes in datasets
-        let ret = turf.buffer(featureCollection.features[0],0.3, {units: 'kilometers'});
+        let ret = turf.buffer(featureCollection.features[0],bufferKm, {units: 'kilometers'});
+        // let ret = featureCollection.features[0];
 
         turf.featureEach(featureCollection, function (currentFeature, featureIndex) {
             if (featureIndex > 0) {
-                ret = turf.union(ret, turf.buffer(currentFeature,0.3, {units: 'kilometers'}))
+                ret = turf.union(ret, turf.buffer(currentFeature,bufferKm, {units: 'kilometers'}))
+                // ret = turf.union(ret, currentFeature);
             }
         });
+
+        // Remove any holes added in union
+        ret.geometry.coordinates.length = 1;
+
         return ret;
 };
 
@@ -112,7 +115,7 @@ async function getATCSectors() {
         });
         allSectors = turf.featureCollection(allSectors);
         SECTORS = allSectors;
-        console.log(`SECTORS`)
+        console.log(`Complete geojson`)
         console.log(SECTORS);
 
         map.addSource('std', {
@@ -159,25 +162,36 @@ async function getATCSectors() {
             'text-ignore-placement': false
         };
 
-        // map.addLayer({
-        //     'id': 'stdPoly',
-        //     'type': 'fill',
-        //     'source': 'std', // reference the data source
-        //     'layout': {},
-        //     'paint': {
-        //         'fill-color': await getColourHex('Infill')
-        //         // 'fill-opacity': 0.3
-        //     }
-        // });
+        map.addLayer({
+            'id': 'stdPoly',
+            'type': 'fill',
+            'source': 'std', // reference the data source
+            'layout': {},
+            'paint': {
+                'fill-color': await getColourHex('Infill'),
+                'fill-opacity': 0.6
+            }
+        });
+        map.addLayer({
+            'id': 'nonstdLine',
+            'type': 'line',
+            'source': 'nonstd',
+            'layout': {},
+            'minzoom': 5,
+            'paint': {
+            'line-color': await getColourHex('SecondaryMap'),
+            'line-width': 3
+            }
+        });
         map.addLayer({
             'id': 'stdLine',
             'type': 'line',
             'source': 'std', // reference the data source
             'layout': {},
-            'maxzoom': 5,
+            // 'maxzoom': 5,
             'paint': {
-                'line-color': await getColourHex('GenericText'),
-                'line-width': 1
+                'line-color': await getColourHex('CPDLCFreetext'),
+                'line-width': 4
                 // 'fill-opacity': 0.3
             }
         });
@@ -191,17 +205,7 @@ async function getATCSectors() {
                 'text-color': await getColourHex('NonInteractiveText')
             }
         });
-        map.addLayer({
-            'id': 'nonstdLine',
-            'type': 'line',
-            'source': 'nonstd',
-            'layout': {},
-            'minzoom': 5,
-            'paint': {
-            'line-color': await getColourHex('GenericText'),
-            'line-width': 2
-            }
-        });
+
 
         map.addLayer({
             'id': 'stdText',
@@ -209,7 +213,7 @@ async function getATCSectors() {
             'source': 'std', // reference the data source
             'layout': stdLayout,
             'paint': {
-                'text-color': await getColourHex('GenericText')
+                'text-color': await getColourHex('StripText')
             }
         });
 
