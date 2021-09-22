@@ -63,12 +63,12 @@ function unionArray(array){
         if (featureCollection.length === 0) {
             return null
         }
-
-        let ret = featureCollection.features[0];
+        // buffer is a dirty dirty hack to close up some holes in datasets
+        let ret = turf.buffer(featureCollection.features[0],0.3, {units: 'kilometers'});
 
         turf.featureEach(featureCollection, function (currentFeature, featureIndex) {
             if (featureIndex > 0) {
-                ret = turf.union(ret, currentFeature)
+                ret = turf.union(ret, turf.buffer(currentFeature,0.3, {units: 'kilometers'}))
             }
         });
         return ret;
@@ -174,6 +174,7 @@ async function getATCSectors() {
             'type': 'line',
             'source': 'std', // reference the data source
             'layout': {},
+            'maxzoom': 5,
             'paint': {
                 'line-color': await getColourHex('GenericText'),
                 'line-width': 1
@@ -231,6 +232,7 @@ var map = new mapboxgl.Map({
     style: 'mapbox://styles/cycloptivity/cksqo94ovrrk517lyn947vqw2',
     center: mapCenter, // starting position [lng, lat]
     zoom:  mapZoom, // starting zoom
+    maxZoom: 7,
     attributionControl: false
 });
 map.dragRotate.disable();
