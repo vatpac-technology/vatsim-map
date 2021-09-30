@@ -19,7 +19,7 @@ app.get('/', cors(), async (req, res) => {
     <ul>
     <li><a href="/static/sectormap.html">ATC sector map</a></li>
     <li><a href="/static/map.html?theme=light">Pilots map - light theme</a></li>
-    <li><a href="/static/map.html?theme=light">Pilots map - dark theme</a></li>
+    <li><a href="/static/map.html?theme=dark">Pilots map - dark theme</a></li>
     </ul>
     ${config.get('app.name')} / ${config.get('app.version')} ${process.env.NODE_ENV}
     `);
