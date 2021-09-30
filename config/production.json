@@ -26,6 +26,7 @@
                 "BN-MDE_CTR",
                 "BN-TBP_CTR",
                 "BN-TRT_CTR",
+                "BN-DOS_CTR",
                 "ML-ASP_CTR",
                 "ML-BKE_CTR",
                 "ML-ESP_CTR",
