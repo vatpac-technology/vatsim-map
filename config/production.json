@@ -23,18 +23,17 @@
             "standard": [
                 "BN-ARA_CTR",
                 "BN-ISA_CTR",
-                "BN-KEN_CTR",
-                "BN-INL_CTR",
-                "BN-ARM_CTR",
+                "BN-MDE_CTR",
+                "BN-TBP_CTR",
                 "BN-TRT_CTR",
                 "ML-ASP_CTR",
-                "ML-ARM_CTR",
-                "ML-OLW_CTR",
-                "ML-PIY_CTR",
+                "ML-BKE_CTR",
+                "ML-ESP_CTR",
+                "ML-ORE_CTR",
+                "ML-SNO_CTR",
                 "ML-TBD_CTR",
                 "ML-TAS_CTR",
-                "ML-ELW_CTR",
-                "ML-BIK_CTR"
+                "ML-WOL_CTR"
             ]
         }
     },

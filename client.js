@@ -57,7 +57,7 @@ export async function getOSMAerodromeData (areaName) {
                         cache.set(areaName, data, 86400);
                     }
                 },
-                { overpassUrl: config.get('data.osm.overpassUrl') }
+                { overpassUrl: config.get('data.osm.overpassUrl'), userAgent: `${config.get('app.name')}/${config.get('app.version')}` }
             );
 
         }catch(err){

@@ -14,7 +14,7 @@
     "express": "^4.17.1",
     "node-cache": "^5.1.2",
     "node-fetch": "^2.6.1",
-    "query-overpass": "^1.5.5",
+    "query-overpass": "https://github.com/Kahn/query-overpass.git",
     "rgb2hex": "^0.2.5",
     "xml-js": "^1.6.11"
   },

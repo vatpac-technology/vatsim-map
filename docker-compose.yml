@@ -1,0 +1,26 @@
+version: '3.9'
+services:
+  express:
+    container_name: express
+    build:
+        context: .
+        dockerfile: Dockerfile
+    command: node server.js
+    volumes:
+      - .:/usr/app/
+      - /usr/app/node_modules
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+  webserver:
+    image: nginx:mainline-alpine
+    container_name: webserver
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx-conf/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - express
