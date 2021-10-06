@@ -2,40 +2,54 @@
 // TODO - Sort out why webpack is failing
 // import { lightDetailedLayout, lightPaint, lightLayout, darkDetailedLayout, darkPaint, darkLayout } from "./map-styles";
 
-// Color palette
-const darkTextTheme = {
-    primaryText: '#FFF',
-    secondaryText: '#969696',
-    textHalo: '#000'
-}
+function findGetParameter(parameterName) {
+    var result = false,
+        tmp = [];
+    location.search
+        .substr(1)
+        .split("&")
+        .forEach(function (item) {
+        tmp = item.split("=");
+        if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
+        });
+    return result;
+};
 
-const lightTextTheme = {
+// Color palette
+// Used on light background
+const darkTextTheme = {
     primaryText: '#000',
-    secondaryText: '#646464',
+    secondaryText: '#939393',
+    textHalo: '#FFF'
+}
+// Used on dark background
+const lightTextTheme = {
+    primaryText: '#FFF',
+    secondaryText: '#939393',
     textHalo: '#FFF'
 }
 
 const lightPaint = {
     'text-color': lightTextTheme.primaryText,
     'text-halo-color': lightTextTheme.textHalo,
-    'text-halo-width': 2
+    'text-halo-width': 0
 }
 
 const darkPaint = {
     'text-color': darkTextTheme.primaryText,
     'text-halo-color': darkTextTheme.textHalo,
-    'text-halo-width': 0.1
+    'text-halo-width': 0
 }
 
 const lightLayout = {
     'text-field': ['format',
-        ['get', 'callsign', ['object', ['get', 'pilot']]], {}
+        ['get', 'callsign', ['object', ['get', 'pilot']]], { 'text-color': lightTextTheme.primaryText }
     ],
     'text-font': [
         'Open Sans Semibold',
         'Arial Unicode MS Bold'
     ],
-    'text-size': 10,
+    'text-size': 12,
     'text-offset': [1, 0],
     'text-anchor': 'left',
     'text-allow-overlap': false,
@@ -44,7 +58,7 @@ const lightLayout = {
 
 const lightDetailedLayout = {
     'text-field': ['format',
-        ['get', 'callsign', ['object', ['get', 'pilot']]], {},
+        ['get', 'callsign', ['object', ['get', 'pilot']]], { 'text-color': lightTextTheme.primaryText },
         "\n", {},
         ['get', 'tag_alt', ['object', ['get', 'pilot']]], { 'text-color': lightTextTheme.secondaryText },
         " ", {},
@@ -54,7 +68,7 @@ const lightDetailedLayout = {
         'Open Sans Semibold',
         'Arial Unicode MS Bold'
     ],
-    'text-size': 10,
+    'text-size': 12,
     'text-offset': [1, 0],
     'text-anchor': 'left',
     'text-allow-overlap': false,
@@ -63,13 +77,13 @@ const lightDetailedLayout = {
 
 const darkLayout = {
     'text-field': ['format',
-        ['get', 'callsign', ['object', ['get', 'pilot']]], {}
+        ['get', 'callsign', ['object', ['get', 'pilot']]], { 'text-color': darkTextTheme.primaryText }
     ],
     'text-font': [
         'Open Sans Semibold',
         'Arial Unicode MS Bold'
     ],
-    'text-size': 10,
+    'text-size': 12,
     'text-offset': [1, 0],
     'text-anchor': 'left',
     'text-allow-overlap': false,
@@ -78,7 +92,7 @@ const darkLayout = {
 
 const darkDetailedLayout = {
     'text-field': ['format',
-        ['get', 'callsign', ['object', ['get', 'pilot']]], {},
+        ['get', 'callsign', ['object', ['get', 'pilot']]], { 'text-color': darkTextTheme.primaryText },
         "\n", {},
         ['get', 'tag_alt', ['object', ['get', 'pilot']]], { 'text-color': darkTextTheme.secondaryText },
         " ", {},
@@ -88,7 +102,7 @@ const darkDetailedLayout = {
         'Open Sans Semibold',
         'Arial Unicode MS Bold'
     ],
-    'text-size': 10,
+    'text-size': 12,
     'text-offset': [1, 0],
     'text-anchor': 'left',
     'text-allow-overlap': false,
@@ -122,9 +136,6 @@ const clearAsyncInterval = (intervalIndex) => {
   }
 };
 
-const mapCenter = [134.9, -28.2];
-const mapZoom = 3;
-
 mapboxgl.accessToken = 'pk.eyJ1IjoiY3ljbG9wdGl2aXR5IiwiYSI6ImNqcDY0NnZnYzBmYjYzd284dzZudmdvZmUifQ.RyR4jd1HRggrbeZRvkv0xg';
 var markers = [];
 var reload = true;
@@ -137,8 +148,8 @@ const styleDark = 'mapbox://styles/cycloptivity/ckrsmmn0623yb17pew9y59lao';
 var map = new mapboxgl.Map({
         container: 'map', // container ID
         style: styleLight, // style URL
-        center: mapCenter, // starting position [lng, lat]
-        zoom:  mapZoom, // starting zoom
+        center: [134.9, -28.2],
+        zoom:  3,
         attributionControl: false
 });
 map.dragRotate.disable();
@@ -149,33 +160,26 @@ map.addControl(new mapboxgl.AttributionControl({
 }))
 
 // Light / Dark switch
-function findGetParameter(parameterName) {
-    var result = null,
-        tmp = [];
-    location.search
-        .substr(1)
-        .split("&")
-        .forEach(function (item) {
-        tmp = item.split("=");
-        if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
-        });
-    return result;
-};
-var theme = findGetParameter('theme');
+var theme = findGetParameter('theme') || 'light';
 if(theme == 'dark'){
     map.setStyle(styleDark);
 }
 
 async function getPilots() {
     var dataApi = findGetParameter('dataApi');
-    if(dataApi != null){
+    if(dataApi != false){
         var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/${dataApi}`);
     }else{
         var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/pilots`);
     }
-
     var json = await response.json();
     pilots = json;
+    return json;
+};
+
+async function getMajorAerodromes() {
+    var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/aerodromes`);
+    var json = await response.json();
     return json;
 };
 
@@ -492,6 +496,11 @@ map.on('load', function () {
         'type': 'geojson',
         'data': null
     });
+
+    map.jumpTo({
+        center: [findGetParameter('lon') || 134.9, findGetParameter('lat') || -28.2 ],
+        zoom:  findGetParameter('zoom') || 3,
+    })
 
     setPilotsLayer();
     setPilotMarkers();

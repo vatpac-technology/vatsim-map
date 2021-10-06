@@ -7,11 +7,14 @@ import { FetchError } from 'node-fetch';
 import query_overpass from 'query-overpass';
 import config from 'config';
 import { iso2dec } from './iso2dec.js';
+import {Mutex, Semaphore, withTimeout} from 'async-mutex';
 
 var log = bunyan.createLogger({name: config.get('app.name'), level: config.get('app.log_level')});
 
 const cache = new NodeCache( { stdTTL: 15, checkperiod: 30 } );
 const userAgent = `User-Agent: ${config.get('app.name')} / ${config.get('app.version')} ${config.get('app.url')}`
+
+const mutex = new Mutex();
 
 /**
  * @typedef {Object} LineObj
@@ -33,45 +36,52 @@ export function cacheStats(){
 }
 
 export async function getOSMAerodromeData (areaName) {
-    var ttlMs = cache.getTtl(areaName);
-    let data;
-    if (ttlMs == undefined || ttlMs - Date.now() <= 120000) {
-        try{
-            data = await query_overpass(
-                `area["name"="${areaName}"]->.boundaryarea;
-                (
-                nwr(area.boundaryarea)["aeroway"="aerodrome"];
+    log.info(`getOSMAerodromeData`);
+    var data = await mutex.runExclusive(async () => {
+        log.info(`mutex locked`);
+        var ttlMs = cache.getTtl(areaName);
+        let data;
+        if (ttlMs == undefined || ttlMs - Date.now() <= 120000) {
+            log.info(`Querying OSM`);
+            try{
+                data = await query_overpass(
+                    `area["name"="${areaName}"]->.boundaryarea;
+                    (
+                    nwr(area.boundaryarea)["aeroway"="aerodrome"];
+                    );
+                    out body;
+                    >;
+                    out skel qt;`,
+                    function(err, data){
+                        if(err){
+                            log.error(err);
+                        }else{
+                            log.info({
+                                cache: 'set',
+                                area: areaName,
+                                keys: Object.keys(data).length
+                            })
+                            cache.set(areaName, data, 86400);
+                        }
+                    },
+                    { overpassUrl: config.get('data.osm.overpassUrl'), userAgent: `${config.get('app.name')}/${config.get('app.version')}` }
                 );
-                out body;
-                >;
-                out skel qt;`,
-                function(err, data){
-                    if(err){
-                        log.error(err);
-                    }else{
-                        log.info({
-                            cache: 'set',
-                            area: areaName,
-                            keys: Object.keys(data).length
-                        })
-                        cache.set(areaName, data, 86400);
-                    }
-                },
-                { overpassUrl: config.get('data.osm.overpassUrl'), userAgent: `${config.get('app.name')}/${config.get('app.version')}` }
-            );
-
-        }catch(err){
-            log.error(`Failed quering overpass`);
-            log.error({err: err});
+                log.error({data: data});
+            }catch(err){
+                log.error(`Failed quering overpass`);
+                log.error({err: err});
+            }
+        }else{
+            log.info(`Return cached OSM response`);
+            data = cache.get(areaName);
+            log.info({
+                cache: 'get',
+                area: areaName,
+                keys: Object.keys(data).length
+            })
         }
-    }else{
-        data = cache.get(areaName);
-        log.debug({
-            cache: 'get',
-            area: areaName,
-            keys: Object.keys(data).length
-        })
-    }
+        return data;
+    });
     return data;
 };
 
@@ -371,7 +381,7 @@ function xmlToFeatures (data) {
                   }, lines);
                 // Create GeoJSON poly
                 if(lines.length > 0){
-                    polys.push(lineString(lines,{ properties: obj._attributes }));
+                    polys.push(lineToPolygon(lineString(lines),{ properties: obj._attributes }));
                 }
             })
         }catch(err){

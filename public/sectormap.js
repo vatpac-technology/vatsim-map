@@ -1,5 +1,18 @@
 // import { feature, featureCollection, sector } from "@turf/turf";
 
+function findGetParameter(parameterName) {
+    var result = false,
+        tmp = [];
+    location.search
+        .substr(1)
+        .split("&")
+        .forEach(function (item) {
+        tmp = item.split("=");
+        if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
+        });
+    return result;
+};
+
 function getSectorByName(sectorName, json){
     var sector = json.find(e => {
         if(e.Name === sectorName){
@@ -77,17 +90,17 @@ function unionArray(array){
         return ret;
 };
 
-async function getColourHex(vatsysId){
-    var res = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/atc/colours`);
-    var json = await res.json();
-    var colour = false;
-    colour = json.find((e) => {
-        if(e.id === vatsysId){
-            return e;
-        }
-    })
-    return colour.hex;
-}
+// async function getColourHex(vatsysId){
+//     var res = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/atc/colours`);
+//     var json = await res.json();
+//     var colour = false;
+//     colour = json.find((e) => {
+//         if(e.id === vatsysId){
+//             return e;
+//         }
+//     })
+//     return colour.hex;
+// }
 
 async function getATCSectors() {
     try{
@@ -162,16 +175,16 @@ async function getATCSectors() {
             'text-ignore-placement': false
         };
 
-        map.addLayer({
-            'id': 'stdPoly',
-            'type': 'fill',
-            'source': 'std', // reference the data source
-            'layout': {},
-            'paint': {
-                'fill-color': await getColourHex('Infill'),
-                'fill-opacity': 0.6
-            }
-        });
+        // map.addLayer({
+        //     'id': 'stdPoly',
+        //     'type': 'fill',
+        //     'source': 'std', // reference the data source
+        //     'layout': {},
+        //     'paint': {
+        //         'fill-color': await getColourHex('Infill'),
+        //         'fill-opacity': 0.6
+        //     }
+        // });
         map.addLayer({
             'id': 'nonstdLine',
             'type': 'line',
@@ -179,8 +192,8 @@ async function getATCSectors() {
             'layout': {},
             'minzoom': 5,
             'paint': {
-            'line-color': await getColourHex('SecondaryMap'),
-            'line-width': 3
+            'line-color': "#949494",
+            'line-width': 1
             }
         });
         map.addLayer({
@@ -190,7 +203,7 @@ async function getATCSectors() {
             'layout': {},
             // 'maxzoom': 5,
             'paint': {
-                'line-color': await getColourHex('CPDLCFreetext'),
+                'line-color': "#000",
                 'line-width': 4
                 // 'fill-opacity': 0.3
             }
@@ -202,7 +215,7 @@ async function getATCSectors() {
             'minzoom': 5,
             'layout': nonstdLayout,
             'paint': {
-                'text-color': await getColourHex('NonInteractiveText')
+                'text-color': "#646464",
             }
         });
 
@@ -213,7 +226,7 @@ async function getATCSectors() {
             'source': 'std', // reference the data source
             'layout': stdLayout,
             'paint': {
-                'text-color': await getColourHex('StripText')
+                'text-color': "#000",
             }
         });
 
@@ -222,10 +235,6 @@ async function getATCSectors() {
         console.log(err);
     }
 };
-
-const mapCenter = [134.9, -28.2];
-const mapZoom = 4.3;
-
 // Map BG ASDBackground
 
 var SECTORS = false;
@@ -234,8 +243,8 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiY3ljbG9wdGl2aXR5IiwiYSI6ImNqcDY0NnZnYzBmYjYzd
 var map = new mapboxgl.Map({
     container: 'map', // container ID
     style: 'mapbox://styles/cycloptivity/cksqo94ovrrk517lyn947vqw2',
-    center: mapCenter, // starting position [lng, lat]
-    zoom:  mapZoom, // starting zoom
+    center: [134.9, -28.2 ],
+    zoom: 4.3,
     maxZoom: 7,
     attributionControl: false
 });
@@ -309,6 +318,11 @@ for (let lat = -80; lat <= 80; lat += 10) {
 
 map.on('load', function () {
 
+    map.jumpTo({
+        center: [findGetParameter('lon') || 134.9, findGetParameter('lat') || -28.2 ],
+        zoom:  findGetParameter('zoom') || 4.3,
+    })
+
     map.addSource('graticule', {
         type: 'geojson',
         data: graticule
@@ -316,7 +330,11 @@ map.on('load', function () {
     map.addLayer({
         id: 'graticule',
         type: 'line',
-        source: 'graticule'
+        source: 'graticule',
+        'paint': {
+            'line-color': "#dedede",
+            'line-width': 0.5
+        }
     });
 
     getATCSectors();

@@ -21,22 +21,36 @@
         ],
         "sectors": {
             "standard": [
-                "BN-ARA_CTR",
-                "BN-ISA_CTR",
-                "BN-MDE_CTR",
-                "BN-TBP_CTR",
                 "BN-TRT_CTR",
-                "BN-DOS_CTR",
+                "BN-ARA_CTR",
+                "BN-KEN_CTR",
+                "BN-ISA_CTR",
+                "BN-INL_CTR",
+                "BN-ARM_CTR",
+                "ML-OLW_CTR",
                 "ML-ASP_CTR",
-                "ML-BKE_CTR",
-                "ML-ESP_CTR",
-                "ML-ORE_CTR",
-                "ML-SNO_CTR",
+                "ML-ARM_CTR",
                 "ML-TBD_CTR",
+                "ML-PIY_CTR",
+                "ML-BIK_CTR",
+                "ML-ELW_CTR",
                 "ML-TAS_CTR",
-                "ML-WOL_CTR"
+                "BN-TSN_FSS",
+                "ML-IND_FSS"
             ]
-        }
+        },
+        "majorAerodromes": [
+            "YSSY",
+            "YMML",
+            "YBBN",
+            "YPPH",
+            "YPAD",
+            "YBCG",
+            "YBCS",
+            "YSCB",
+            "YMHB",
+            "YPDN"
+        ]
     },
     "data": {
         "vatsim": {
@@ -51,7 +65,7 @@
         },
         "osm": {
             "overpassUrl": "https://lz4.overpass-api.de/api/interpreter",
-            "aerodromesArea": "New South Wales"
+            "aerodromesArea": "Australia"
         }
     }
 }

@@ -38,7 +38,6 @@ function pilotsInFIR(firs, aerodromes, data){
             // Return only pilots inside filtered FIRs
             pilotsInFIR.push(ppos);
         }
-        
     });
     return featureCollection(pilotsInFIR);
 }
@@ -71,7 +70,7 @@ function pointInFIR (point, firs) {
     var mappedFIRs = config.get("map.firs");
     var inFIR = false;
     firs.forEach(function(fir){
-        if(mappedFIRs.includes(fir.properties.name)) {
+        if(mappedFIRs.includes(fir.properties.Name)) {
             if(booleanPointInPolygon(point,fir)){
                 inFIR = true;
             }
@@ -85,7 +84,7 @@ function pointInAerodrome (point, aerodromes){
     var inAerodrome = false;
     try{
         if(aerodromes == undefined){
-            log.info("Aerodromes not loaded");
+            log.debug("Aerodromes not loaded");
         }else{
             aerodromes.features.forEach(function(aerodrome){
                 if(aerodrome.properties.tags.icao != undefined){
