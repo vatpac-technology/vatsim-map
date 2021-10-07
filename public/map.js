@@ -155,15 +155,18 @@ var map = new mapboxgl.Map({
 map.dragRotate.disable();
 map.touchZoomRotate.disableRotation();
 
-map.addControl(new mapboxgl.AttributionControl({
-    customAttribution: '<a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>'
-}))
-
 // Light / Dark switch
 var theme = findGetParameter('theme') || 'light';
 if(theme == 'dark'){
     map.setStyle(styleDark);
 }
+
+async function getDataset() {
+    var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/dataset`);
+    var json = await response.json();
+    dataset = json;
+    return json;
+};
 
 async function getPilots() {
     var dataApi = findGetParameter('dataApi');
@@ -490,8 +493,15 @@ async function setPilotMarkers () {
 
 getPilots();
 
-map.on('load', function () {
+(async () => {
+var dataset = await getDataset();
+console.log(dataset);
+map.addControl(new mapboxgl.AttributionControl({
+    customAttribution: `vatSys ${dataset.Profile._attributes.Name} dataset <strong>AIRAC ${dataset.Profile.Version._attributes.AIRAC}${dataset.Profile.Version._attributes.Revision}</strong> | <a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>`
+}))
+})();
 
+map.on('load', function () {
     map.addSource('aircraftMarkersSource', {
         'type': 'geojson',
         'data': null

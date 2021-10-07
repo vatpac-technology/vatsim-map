@@ -6,6 +6,7 @@ import { getATCSectors, getCoastline, getColours } from './atc.js';
 import { getAerodromes, getMajorAerodromes } from './aerodrome.js';
 import config from 'config';
 import { getOSMAerodromeData } from './client.js';
+import { getDataset } from './dataset.js';
 
 const app = express()
 const PORT = config.get('app.http.port');
@@ -32,6 +33,15 @@ app.use('/favicon.ico', express.static('public/favicon.ico'));
 
 app.use('/testdata', express.static('data'));
 
+app.get('/v1/dataset', cors(), async (req, res) => {
+  var dataset = await getDataset();
+  if(dataset == false){
+    res.sendStatus(500);
+  }else{
+    res.send(dataset)
+  }
+});
+
 app.get('/v1/pilots', cors(), async (req, res) => {
     var pilots = await getPilots();
     if(pilots == false){
@@ -49,7 +59,6 @@ app.get('/v1/atc/sectors', cors(), async (req, res) => {
       return sector.standard_position===true;
     });
   }
-  // console.log(sectors);
   if(sectors == false){
     res.sendStatus(500);
   }else{

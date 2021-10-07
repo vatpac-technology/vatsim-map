@@ -14,6 +14,7 @@
               top: 0;
               bottom: 0;
               width: 100%;
+              z-index: 0;
             }
 
             .mapboxgl-popup-content {
@@ -24,6 +25,13 @@
                 font-size: 10pt;
                 /* line-height: 1.4; */
                 white-space: pre-line;
+            }
+            #mgl-map-overlay {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                z-index: 1;
+                background-color: #fff;
             }
           </style>
     </head>
@@ -43,6 +51,15 @@
         <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
         <!-- <script src="map-styles.js"></script> -->
+        <div id='mgl-map-overlay'>
+            <strong>Map key</strong>
+            <ul>
+                <li>Thick solid line: Standard sector boundary</li>
+                <li>Thin solid line: Non-standard sector boundary</li>
+                <li>Thick dashed line: TMA volume boundary</li>
+                <li>Thin dotted line: Tower volume boundary</li>
+            </ul>
+        </div>
         <script src="sectormap.js"></script>
     </body>
 </html>

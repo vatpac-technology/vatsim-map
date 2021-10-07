@@ -8,6 +8,7 @@ import query_overpass from 'query-overpass';
 import config from 'config';
 import { iso2dec } from './iso2dec.js';
 import {Mutex, Semaphore, withTimeout} from 'async-mutex';
+import uniqueRandomArray from 'unique-random-array';
 
 var log = bunyan.createLogger({name: config.get('app.name'), level: config.get('app.log_level')});
 
@@ -35,57 +36,8 @@ export function cacheStats(){
     return stats;
 }
 
-export async function getOSMAerodromeData (areaName) {
-    log.info(`getOSMAerodromeData`);
-    var data = await mutex.runExclusive(async () => {
-        log.info(`mutex locked`);
-        var ttlMs = cache.getTtl(areaName);
-        let data;
-        if (ttlMs == undefined || ttlMs - Date.now() <= 120000) {
-            log.info(`Querying OSM`);
-            try{
-                data = await query_overpass(
-                    `area["name"="${areaName}"]->.boundaryarea;
-                    (
-                    nwr(area.boundaryarea)["aeroway"="aerodrome"];
-                    );
-                    out body;
-                    >;
-                    out skel qt;`,
-                    function(err, data){
-                        if(err){
-                            log.error(err);
-                        }else{
-                            log.info({
-                                cache: 'set',
-                                area: areaName,
-                                keys: Object.keys(data).length
-                            })
-                            cache.set(areaName, data, 86400);
-                        }
-                    },
-                    { overpassUrl: config.get('data.osm.overpassUrl'), userAgent: `${config.get('app.name')}/${config.get('app.version')}` }
-                );
-                log.error({data: data});
-            }catch(err){
-                log.error(`Failed quering overpass`);
-                log.error({err: err});
-            }
-        }else{
-            log.info(`Return cached OSM response`);
-            data = cache.get(areaName);
-            log.info({
-                cache: 'get',
-                area: areaName,
-                keys: Object.keys(data).length
-            })
-        }
-        return data;
-    });
-    return data;
-};
-
-export async function getVatsimData (url) {
+async function getVatsimServers(){
+    const url = config.get('data.vatsim.statusUrl');
     var ttlMs = cache.getTtl(url);
     let data;
     // VATSIM data is refreshed every 15s. Check 10s out from expiry.
@@ -145,6 +97,129 @@ export async function getVatsimData (url) {
         };
     }else{
         data = cache.get(url);
+        log.debug({
+            cache: 'get',
+            url: url,
+            keys: Object.keys(data).length
+        })
+    }
+    return data;
+}
+
+export async function getOSMAerodromeData (areaName) {
+    log.info(`getOSMAerodromeData`);
+    var data = await mutex.runExclusive(async () => {
+        log.info(`mutex locked`);
+        var ttlMs = cache.getTtl(areaName);
+        let data;
+        if (ttlMs == undefined || ttlMs - Date.now() <= 120000) {
+            log.info(`Querying OSM`);
+            try{
+                data = await query_overpass(
+                    `area["name"="${areaName}"]->.boundaryarea;
+                    (
+                    nwr(area.boundaryarea)["aeroway"="aerodrome"];
+                    );
+                    out body;
+                    >;
+                    out skel qt;`,
+                    function(err, data){
+                        if(err){
+                            log.error(err);
+                        }else{
+                            log.info({
+                                cache: 'set',
+                                area: areaName,
+                                keys: Object.keys(data).length
+                            })
+                            cache.set(areaName, data, 86400);
+                        }
+                    },
+                    { overpassUrl: config.get('data.osm.overpassUrl'), userAgent: `${config.get('app.name')}/${config.get('app.version')}` }
+                );
+                log.error({data: data});
+            }catch(err){
+                log.error(`Failed quering overpass`);
+                log.error({err: err});
+            }
+        }else{
+            log.info(`Return cached OSM response`);
+            data = cache.get(areaName);
+            log.info({
+                cache: 'get',
+                area: areaName,
+                keys: Object.keys(data).length
+            })
+        }
+        return data;
+    });
+    return data;
+};
+
+export async function getVatsimData () {
+    const vatsimServers = await getVatsimServers();
+    var getUrl = uniqueRandomArray(vatsimServers.data.v3);
+    var url = getUrl();
+    log.debug(`VATSIM data URL: ${url}`);
+    var ttlMs = cache.getTtl('getVatsimData');
+    let data;
+    // VATSIM data is refreshed every 15s. Check 10s out from expiry.
+    if (ttlMs == undefined || ttlMs - Date.now() <= 10000) {
+        try{
+            // Download fresh VATSIM data
+            if(ttlMs == undefined){
+                // If there is nothing cached - retry forever.
+                const res = await fetch(url, {
+                    retryOptions: {
+                        retryMaxDuration: 30000, // Max 30s retrying
+                        retryInitialDelay: 1000, // 1s initial wait
+                        retryBackoff: 500 // 0.5s backoff
+                    },
+                    headers: {
+                        'User-Agent': userAgent
+                    }
+                })
+                .then(res => res.json())
+                .then( data => {
+                    return data;
+                })
+                log.trace({res: res});
+                data = res;
+            }else{
+                // If there is an old cache, timeout quickly.
+                const res = await fetch(url, {
+                    retryOptions: {
+                        retryMaxDuration: 2000,
+                        retryInitialDelay: 500,
+                        retryBackoff: 1.0 // no backoff
+                    },
+                    headers: {
+                        'User-Agent': userAgent
+                    }
+                })
+                .then(res => res.json())
+                .then( data => {
+                    return data;
+                })
+                log.trace({res: res});
+                data = res;
+            }
+        log.info({
+            cache: 'set',
+            url: url,
+            keys: Object.keys(data).length
+        })
+        cache.set('getVatsimData', data, 30);
+        }catch(err){
+            if ( err instanceof FetchError) {
+                // Failed to download - load from cache
+                data = cache.get(url);
+            } else {
+                log.error(err);
+            }
+        };
+    }else{
+        data = cache.get('getVatsimData');
         log.debug({
             cache: 'get',
             url: url,

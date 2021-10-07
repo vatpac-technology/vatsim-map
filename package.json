@@ -17,6 +17,7 @@
     "node-fetch": "^2.6.1",
     "query-overpass": "https://github.com/Kahn/query-overpass.git",
     "rgb2hex": "^0.2.5",
+    "unique-random-array": "^3.0.0",
     "xml-js": "^1.6.11"
   },
   "devDependencies": {

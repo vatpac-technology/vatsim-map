@@ -115,34 +115,82 @@ async function getATCSectors() {
                 stdSectors.push(mergedSector);
             }
         });
-        stdSectors = turf.featureCollection(stdSectors);
 
-        var allSectors = [];
+        var upperSectors = [];
         sectorsJson.forEach(sector => {
-            if(sector.Callsign.includes("CTR")){
+            // // Do not filter sub sector volumes
+            // var sector = mergeBoundaries(sector);
+            // if(sector != false){
+            //     allSectors.push(sector);
+            // }
+
+            if(sector.Callsign.includes("FSS") ||sector.Callsign.includes("CTR")){
                 var sector = mergeBoundaries(sector);
                 if(sector != false){
-                    allSectors.push(sector);
+                    upperSectors.push(sector);
                 }
             }
         });
-        allSectors = turf.featureCollection(allSectors);
-        SECTORS = allSectors;
-        console.log(`Complete geojson`)
+
+        var tmaSectors = [];
+        sectorsJson.forEach(sector => {
+            // // Do not filter sub sector volumes
+            // var sector = mergeBoundaries(sector);
+            // if(sector != false){
+            //     allSectors.push(sector);
+            // }
+
+            if(sector.Callsign.includes("APP")){
+                var sector = mergeBoundaries(sector);
+                if(sector != false){
+                    tmaSectors.push(sector);
+                }
+            }
+        });
+
+        var twrSectors = [];
+        sectorsJson.forEach(sector => {
+            // // Do not filter sub sector volumes
+            // var sector = mergeBoundaries(sector);
+            // if(sector != false){
+            //     allSectors.push(sector);
+            // }
+
+            if(sector.Callsign.includes("TWR")){
+                var sector = mergeBoundaries(sector);
+                if(sector != false){
+                    twrSectors.push(sector);
+                }
+            }
+        });
+        SECTORS = turf.featureCollection(upperSectors.concat(tmaSectors,twrSectors));
+        console.log(`debug geojson`)
         console.log(SECTORS);
 
         map.addSource('std', {
                     'type': 'geojson',
-                    'data': stdSectors
+                    'data': turf.featureCollection(stdSectors)
                 });
 
-        map.addSource('nonstd', {
+        map.addSource('upper', {
             'type': 'geojson',
-            'data': allSectors
+            'data': turf.featureCollection(upperSectors)
+        });
+
+        map.addSource('tma', {
+            'type': 'geojson',
+            'data': turf.featureCollection(tmaSectors)
+        });
+
+        map.addSource('twr', {
+            'type': 'geojson',
+            'data': turf.featureCollection(twrSectors)
         });
 
         const stdLayout = {
             'text-field': ['format',
+                ['get', 'FullName'], {},
+                "\n", {},
                 ['get', 'Callsign'], {},
                 "\n", {},
                 ['get', 'Frequency'], {},
@@ -158,8 +206,29 @@ async function getATCSectors() {
             'text-ignore-placement': false
         };
 
+        const twrTmaLayout = {
+            'text-field': ['format',
+                ['get', 'FullName'], {},
+                "\n", {},
+                ['get', 'Callsign'], {},
+                "\n", {},
+                ['get', 'Frequency'], {},
+            ],
+            'text-font': [
+                'Open Sans Semibold',
+                'Arial Unicode MS Bold'
+            ],
+            'text-size': 12,
+            'text-offset': [0, 0],
+            'text-anchor': 'center',
+            'text-allow-overlap': false,
+            'text-ignore-placement': false
+        };
+
         const nonstdLayout = {
             'text-field': ['format',
+                ['get', 'FullName'], {},
+                "\n", {},
                 ['get', 'Callsign'], {},
                 "\n", {},
                 ['get', 'Frequency'], {},
@@ -176,19 +245,53 @@ async function getATCSectors() {
         };
 
         // map.addLayer({
-        //     'id': 'stdPoly',
+        //     'id': 'tmaPoly',
         //     'type': 'fill',
-        //     'source': 'std', // reference the data source
+        //     'source': 'twr', // reference the data source
         //     'layout': {},
         //     'paint': {
-        //         'fill-color': await getColourHex('Infill'),
-        //         'fill-opacity': 0.6
+        //         'fill-color': '#23d922',
+        //         'fill-opacity': 0.2
+        //     }
+        // });
+        // map.addLayer({
+        //     'id': 'twrPoly',
+        //     'type': 'fill',
+        //     'source': 'tma', // reference the data source
+        //     'layout': {},
+        //     'paint': {
+        //         'fill-color': '#ab0dde',
+        //         'fill-opacity': 0.1
         //     }
         // });
         map.addLayer({
-            'id': 'nonstdLine',
+            'id': 'tmaLine',
             'type': 'line',
-            'source': 'nonstd',
+            'source': 'tma',
+            'layout': {},
+            'minzoom': 5,
+            'paint': {
+            'line-color': "#949494",
+            'line-width': 3,
+            'line-dasharray': [10, 8]
+            }
+        });
+        map.addLayer({
+            'id': 'twrLine',
+            'type': 'line',
+            'source': 'twr',
+            'layout': {},
+            'minzoom': 5,
+            'paint': {
+            'line-color': "#949494",
+            'line-width': 1,
+            'line-dasharray': [2, 2]
+            }
+        });
+        map.addLayer({
+            'id': 'upperLine',
+            'type': 'line',
+            'source': 'upper',
             'layout': {},
             'minzoom': 5,
             'paint': {
@@ -209,9 +312,9 @@ async function getATCSectors() {
             }
         });
         map.addLayer({
-            'id': 'nonstdText',
+            'id': 'upperText',
             'type': 'symbol',
-            'source': 'nonstd', // reference the data source
+            'source': 'upper', // reference the data source
             'minzoom': 5,
             'layout': nonstdLayout,
             'paint': {
@@ -219,6 +322,27 @@ async function getATCSectors() {
             }
         });
 
+        map.addLayer({
+            'id': 'tmaText',
+            'type': 'symbol',
+            'source': 'tma', // reference the data source
+            'minzoom': 8,
+            'layout': twrTmaLayout,
+            'paint': {
+                'text-color': "#646464",
+            }
+        });
+
+        map.addLayer({
+            'id': 'twrText',
+            'type': 'symbol',
+            'source': 'twr', // reference the data source
+            'minzoom': 8,
+            'layout': twrTmaLayout,
+            'paint': {
+                'text-color': "#646464",
+            }
+        });
 
         map.addLayer({
             'id': 'stdText',
@@ -237,35 +361,49 @@ async function getATCSectors() {
 };
 // Map BG ASDBackground
 
-var SECTORS = false;
+// Define global SECTORS to enable geocoder
+var SECTORS = [false];
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiY3ljbG9wdGl2aXR5IiwiYSI6ImNqcDY0NnZnYzBmYjYzd284dzZudmdvZmUifQ.RyR4jd1HRggrbeZRvkv0xg';
 var map = new mapboxgl.Map({
     container: 'map', // container ID
-    style: 'mapbox://styles/cycloptivity/cksqo94ovrrk517lyn947vqw2',
+    // style: 'mapbox://styles/cycloptivity/cksqo94ovrrk517lyn947vqw2',
+    style: 'mapbox://styles/cycloptivity/ckrai7rg601cw18p5zu4ntq27',
     center: [134.9, -28.2 ],
     zoom: 4.3,
-    maxZoom: 7,
+    // maxZoom: 7,
     attributionControl: false
 });
 map.dragRotate.disable();
 map.touchZoomRotate.disableRotation();
 
-map.addControl(new mapboxgl.AttributionControl({
-customAttribution: '<a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>'
-}))
+async function getDataset() {
+    var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/dataset`);
+    var json = await response.json();
+    dataset = json;
+    return json;
+};
+
+(async () => {
+    var dataset = await getDataset();
+    console.log(dataset);
+    map.addControl(new mapboxgl.AttributionControl({
+        customAttribution: `vatSys ${dataset.Profile._attributes.Name} dataset <strong>AIRAC ${dataset.Profile.Version._attributes.AIRAC}${dataset.Profile.Version._attributes.Revision}</strong> | <a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>`
+    }))
+})();
 
 //options.localGeocoder Function? A function accepting the query string which performs local geocoding to supplement results from the Mapbox Geocoding API. Expected to return an Array of GeoJSON Features in the Carmen GeoJSON format.
 function forwardGeocoder(query) {
     const matchingFeatures = [];
     for (const feature of SECTORS.features) {
+        console.log(feature)
         // Search by callsign
         if (
         feature.properties.Callsign
         .toLowerCase()
         .includes(query.toLowerCase())
         ) {
-            feature['place_name'] = `${feature.properties.Callsign} (${feature.properties.Frequency})`;
+            feature['place_name'] = `${feature.properties.FullName} ${feature.properties.Callsign} (${feature.properties.Frequency})`;
             feature['center'] = turf.centroid(feature).geometry.coordinates;
             matchingFeatures.push(feature);
         }
@@ -275,11 +413,21 @@ function forwardGeocoder(query) {
             .toLowerCase()
             .includes(query.toLowerCase())
             ) {
-                feature['place_name'] = `${feature.properties.Callsign} (${feature.properties.Frequency})`;
+                feature['place_name'] = `${feature.properties.FullName} ${feature.properties.Callsign} (${feature.properties.Frequency})`;
                 feature['center'] = turf.centroid(feature).geometry.coordinates;
                 matchingFeatures.push(feature);
             }
-    }
+        // Search by Name
+        if (
+            feature.properties.FullName
+            .toLowerCase()
+            .includes(query.toLowerCase())
+            ) {
+                feature['place_name'] = `${feature.properties.FullName} ${feature.properties.Callsign} (${feature.properties.Frequency})`;
+                feature['center'] = turf.centroid(feature).geometry.coordinates;
+                matchingFeatures.push(feature);
+            }
+    };
     return matchingFeatures;
 }
 

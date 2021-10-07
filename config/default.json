@@ -21,37 +21,52 @@
         ],
         "sectors": {
             "standard": [
+                "BN-TRT_CTR",
                 "BN-ARA_CTR",
-                "BN-ISA_CTR",
                 "BN-KEN_CTR",
+                "BN-ISA_CTR",
                 "BN-INL_CTR",
                 "BN-ARM_CTR",
-                "BN-TRT_CTR",
+                "ML-OLW_CTR",
                 "ML-ASP_CTR",
                 "ML-ARM_CTR",
-                "ML-OLW_CTR",
-                "ML-PIY_CTR",
                 "ML-TBD_CTR",
-                "ML-TAS_CTR",
+                "ML-PIY_CTR",
+                "ML-BIK_CTR",
                 "ML-ELW_CTR",
-                "ML-BIK_CTR"
+                "ML-TAS_CTR",
+                "BN-TSN_FSS",
+                "ML-IND_FSS"
             ]
-        }
+        },
+        "majorAerodromes": [
+            "YSSY",
+            "YMML",
+            "YBBN",
+            "YPPH",
+            "YPAD",
+            "YBCG",
+            "YBCS",
+            "YSCB",
+            "YMHB",
+            "YPDN"
+        ]
     },
     "data": {
         "vatsim": {
-            "dataUrl": "https://data.vatsim.net/v3/vatsim-data.json"
+            "statusUrl": "https://status.vatsim.net/status.json"
         },
         "vatsys": {
             "fir_boundariesUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Maps/FIR_BOUNDARIES.xml",
             "volumesUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Volumes.xml",
             "sectorsUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Sectors.xml",
             "coastlineUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Maps/COAST_ALL.xml",
-            "coloursUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Colours.xml"
+            "coloursUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Colours.xml",
+            "profileUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Profile.xml"
         },
         "osm": {
             "overpassUrl": "https://lz4.overpass-api.de/api/interpreter",
-            "aerodromesArea": "New South Wales"
+            "aerodromesArea": "Australia"
         }
     }
 }

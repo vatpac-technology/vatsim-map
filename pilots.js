@@ -9,7 +9,7 @@ var log = bunyan.createLogger({name: config.get('app.name'), level: config.get('
 export async function getPilots(){
     try{
         var firs = await getLineFeatures(config.get('data.vatsys.fir_boundariesUrl'));
-        var vatsimData = await getVatsimData(config.get('data.vatsim.dataUrl'));
+        var vatsimData = await getVatsimData();
         var aerodromes = await getOSMAerodromeData(config.get('data.osm.aerodromesArea'));
     }catch(err){
         log.error(err)
