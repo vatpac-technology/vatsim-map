@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { clearCache, cacheStats } from './client.js';
 import {getPilots} from './pilots.js';
-import { getATCSectors, getCoastline, getColours } from './atc.js';
+import { getATCSectors, getCoastline, getColours, getOnlinePositions } from './atc.js';
 import { getAerodromes, getMajorAerodromes } from './aerodrome.js';
 import config from 'config';
 import { getOSMAerodromeData } from './client.js';
@@ -59,6 +59,15 @@ app.get('/v1/atc/sectors', cors(), async (req, res) => {
       return sector.standard_position===true;
     });
   }
+  if(sectors == false){
+    res.sendStatus(500);
+  }else{
+    res.send(sectors)
+  }
+});
+
+app.get('/v1/atc/online', cors(), async (req, res) => {
+  var sectors = await getOnlinePositions();
   if(sectors == false){
     res.sendStatus(500);
   }else{

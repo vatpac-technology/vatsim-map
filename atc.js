@@ -1,8 +1,15 @@
-import { getLineFeatures, getXMLtoJS } from './client.js';
+import { getLineFeatures, getXMLtoJS, getVatsimAFV } from './client.js';
 import { polygon, featureCollection } from '@turf/helpers';
 import bunyan from 'bunyan';
 import config from 'config';
-import { lineToPolygon, lineString } from '@turf/turf';
+import { 
+    lineToPolygon,
+    lineString,
+    booleanIntersects,
+    buffer,
+    featureEach,
+    union
+} from '@turf/turf';
 import { iso2dec } from './iso2dec.js';
 import rgb2hex from 'rgb2hex';
 
@@ -84,94 +91,6 @@ export async function getATCSectors() {
         }
         sectors.push(sector);
     });
-
-
-    // // Iterate sectors to create objects
-    // let volume;
-    // let sector;
-    // sectorsXml.Sectors.Sector.forEach(function(s){
-    //     var sector = {
-    //         ...s._attributes,
-    //         standard_position: false,
-    //         volumes: [],
-    //         responsibleSectors: ("ResponsibleSectors" in s ? s.ResponsibleSectors._text.split(',') : [])
-    //     };
-    //     // console.log({sector: sector})
-    //     // Iterate all Volumes to join with Sector
-    //     var volumes = volumesXml.Volumes.Volume.filter(function(volume){
-    //         // TODO - Iterate sector.Volumes._text.split(',') to match  
-    //         if(sector.Name === volume._attributes.Name){
-    //             // console.log("Matched Sector to Volume")
-    //             // console.log({volume: volume});
-    //             var newVol = {
-    //                 ...volume._attributes,
-    //                 boundaries: []
-    //             };
-    //             // Get feature
-    //             var volumeBoundaries = volume.Boundaries._text.split(','); // ARAFURA
-    //             // Iterate volume boundaries to join Features to Sector volumes
-    //             volumeBoundaries.forEach(function(volumeBoundary){
-    //                 // console.log({volumeBoundaries: volumeBoundary});
-    //                 var feature = volumeBoundaryFeatures.filter(function(feature){
-    //                     if(feature.properties.Name === volumeBoundary){
-    //                         // console.log("Matched feature to Boundary")
-    //                         // console.log({feature: volumeBoundary});
-    //                         newVol.boundaries.push(feature);
-    //                     };
-    //                 })
-    //             });
-    //             // Attach volume attributes to feature properties
-    //             // Push feature
-    //             sector.volumes.push(newVol);
-    //         }
-    //         // return volume._attributes.Name == sector.Name;
-    //     })
-    //     // var volumes = volumesXml.Volumes.Volume.forEach(function(volume){
-    //     //     console.log({volume: volume})
-    //     //     var features = [];
-    //     //     // Boundaries are CSV
-    //     //     var volumeBoundaries = volume.Boundaries._text.split(','); // ARAFURA
-    //     //     volumeBoundaries.forEach(function(volumeBoundary){
-    //     //         // Get matching Feature for boundary.
-    //     //         var feature = volumeBoundaryFeatures.find(obj => {
-    //     //             if (obj.properties.Name === volumeBoundary){
-    //     //                 console.log('Match obj.properties.Name === volumeBoundary')
-    //     //             }
-    //     //             return false;
-    //     //         });
-    //     //         // sector.volumes.push(feature);
-    //     //     });
-    //     // })
-    //     if (config.get("map.sectors.standard").includes(sector.Callsign)){
-    //         // console.log(`Standard pos ${element._attributes.Callsign}`);
-    //         sector.standard_position = true;
-    //     }
-    //     sectors.push(sector);
-    // })
-    // // Iterate volume boundaries, add volume details to GeoJSON
-    // // volumes.Volumes.Volume.forEach(function(volume){
-    // //     var vol = {
-
-    // //     }
-    // //     console.log(volume)
-    // // });
-
-    // //         var match = sectors.Sectors.Sector.find((element) => {
-    //     //     // Attach sector details to sectors
-    //     //     if (element._attributes.FullName.toUpperCase() == volume.properties.Name){
-    //     //         volume.properties = element._attributes;
-    //     //     }
-    //     //     // Flag standard sectors
-    //     //     if (config.get("map.sectors.standard").includes(element._attributes.Callsign)){
-    //     //         // console.log(`Standard pos ${element._attributes.Callsign}`);
-    //     //         volume.properties.standard_position = true;
-    //     //     }
-    //     // });
-
-    // // Union
-    // // https://github.com/Turfjs/turf/tree/master/packages/turf-union
-
-    // // Return FC
     return sectors;
 }
 
@@ -211,3 +130,146 @@ function getVolume(volumeName, volumesXml){
     newVol.Boundaries = boundaryFeatures;
     return newVol;
 };
+
+function uniq(a) {
+    return Array.from(new Set(a));
+}
+
+function mergeSectors(sector, sectors, json){
+    let mergedSector;
+    // FSS don't have sector volumes, only responsible sectors.
+    if(sector.volumes.length > 0){
+        mergedSector = mergeBoundaries(sector);
+    }
+    if(sectors.length > 0){
+        var sectorVolumes = [];
+        // Union all sector volumes into a polygon
+        sectors.forEach(function(e){
+            var sector = getSectorByName(e, json);
+            var poly = mergeBoundaries(sector);
+            sectorVolumes.push(poly);
+        });
+        // Add self and union all sector volumes
+        sectorVolumes.push(mergeBoundaries(sector));
+        var mergedPoly = unionArray(sectorVolumes);
+        mergedSector = mergedPoly;
+    }
+    if(mergedSector != undefined){
+        mergedSector.properties = {...sector};
+        delete mergedSector.properties.responsibleSectors
+        delete mergedSector.properties.volumes
+        return mergedSector;
+    }
+}
+
+function mergeBoundaries(sector){
+    var features = sector.volumes.map((volume) => volume.Boundaries.map((boundary) => boundary)).flat();
+    if(features.length > 1){
+        var union = unionArray(features);
+        union.properties = { ...sector };
+        delete union.properties.responsibleSectors;
+        delete union.properties.volumes;
+        return union;
+    }else if (features.length == 1){
+        features[0].properties = { ...sector };
+        delete features[0].properties.responsibleSectors;
+        delete features[0].properties.volumes;
+        return features[0];
+    }else{
+        return false;
+    }
+}
+
+function unionArray(array){
+        const bufferKm = 0.1;
+        var fc = featureCollection(array);
+        if (fc.length === 0) {
+            return null
+        }
+        // buffer is a dirty dirty hack to close up some holes in datasets
+        let ret = buffer(fc.features[0],bufferKm, {units: 'kilometers'});
+        // let ret = featureCollection.features[0];
+
+        featureEach(fc, function (currentFeature, featureIndex) {
+            if (featureIndex > 0) {
+                ret = union(ret, buffer(currentFeature,bufferKm, {units: 'kilometers'}))
+                // ret = turf.union(ret, currentFeature);
+            }
+        });
+
+        // Remove any holes added in union
+        ret.geometry.coordinates.length = 1;
+
+        return ret;
+};
+
+function isAdjacentSector(sectorFrequency, primarySector, sectors){
+    var adjacentSector = false;
+    try{
+        // Get sectors with matching frequency
+        var sectorsWithFreq = sectors.filter(function cb(sector){
+            if(parseFloat(sector.Frequency) === parseFloat(sectorFrequency)){
+                return sector;
+            };
+        });
+        sectorsWithFreq.forEach(function(sectorFrequencyMatch){
+            var sfmFreq = parseFloat(sectorFrequencyMatch.Frequency)
+            var sfFreq = parseFloat(sectorFrequency)
+            // Match freqs where not own sector freq
+            if(sfmFreq === sfFreq && sectorFrequencyMatch.Callsign != primarySector.properties.Callsign){
+                var sectorsIntersect = booleanIntersects(primarySector, mergeBoundaries(sectorFrequencyMatch));
+                if(sectorsIntersect){
+                    // Return only sectors sharing a border
+                    adjacentSector = sectorFrequencyMatch;
+                }
+            }
+        });
+    }finally{
+        return adjacentSector;
+    }
+};
+
+export async function getOnlinePositions() {
+    var onlineSectors = [];
+    var sectors = await getATCSectors();
+    var stations = await getVatsimAFV();
+
+    // SY_APP 124.400 AFV 124400000
+    // iterate txvrs.element.transceivers.element frequency/1000000
+    stations.forEach(function(station, index){
+        var activePosition = {};
+        if(station.callsign.toUpperCase().includes("CTR") === false && station.callsign.toUpperCase().includes("APP") === false && station.callsign.toUpperCase().includes("TWR") === false){
+            delete stations[index];
+        }else{
+            var txvrs = [];
+            var frequency = [];
+            station.transceivers.forEach(function(element){
+                // Hertz to Megahurts
+                element.frequency = element.frequency/1000000;
+                txvrs.push(element);
+            })
+            frequency = uniq(txvrs);
+            // Join sectors by callsign
+            var sector = sectors.find(function cb(element){
+                if(element.Callsign === station.callsign){
+                    return element;
+                };
+            });
+            if(sector !== undefined){
+                onlineSectors.push(mergeBoundaries(sector));
+                activePosition = mergeBoundaries(sector);
+            }
+            // Join sectors by frequency
+            // TODO - Only if adjacent to match vatpac extending policy.
+            txvrs.forEach(function(element){
+                var adjacentSector = isAdjacentSector(element.frequency, activePosition, sectors);
+                if(adjacentSector !== false){
+                    onlineSectors.push(mergeBoundaries(adjacentSector))
+                }
+            })
+        }
+    })
+
+
+    return featureCollection(uniq(onlineSectors));
+}

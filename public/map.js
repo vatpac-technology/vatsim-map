@@ -25,20 +25,20 @@ const darkTextTheme = {
 // Used on dark background
 const lightTextTheme = {
     primaryText: '#FFF',
-    secondaryText: '#939393',
-    textHalo: '#FFF'
+    secondaryText: '#c9c9c9',
+    textHalo: '#000'
 }
 
 const lightPaint = {
     'text-color': lightTextTheme.primaryText,
     'text-halo-color': lightTextTheme.textHalo,
-    'text-halo-width': 0
+    'text-halo-width': 3
 }
 
 const darkPaint = {
     'text-color': darkTextTheme.primaryText,
     'text-halo-color': darkTextTheme.textHalo,
-    'text-halo-width': 0
+    'text-halo-width': 3
 }
 
 const lightLayout = {
@@ -97,6 +97,44 @@ const darkDetailedLayout = {
         ['get', 'tag_alt', ['object', ['get', 'pilot']]], { 'text-color': darkTextTheme.secondaryText },
         " ", {},
         ['get', 'tag_gs', ['object', ['get', 'pilot']]], { 'text-color': darkTextTheme.secondaryText }
+    ],
+    'text-font': [
+        'Open Sans Semibold',
+        'Arial Unicode MS Bold'
+    ],
+    'text-size': 12,
+    'text-offset': [1, 0],
+    'text-anchor': 'left',
+    'text-allow-overlap': false,
+    'text-ignore-placement': false
+}
+
+const atcLightDetailedLayout = {
+    'text-field': ['format',
+        ['get', 'Callsign'], { 'text-color': lightTextTheme.primaryText },
+        "\n", {},
+        ['get', 'Frequency'], { 'text-color': lightTextTheme.secondaryText }
+        // " ", {},
+        // ['get', 'callsign'], { 'text-color': lightTextTheme.secondaryText }
+    ],
+    'text-font': [
+        'Open Sans Semibold',
+        'Arial Unicode MS Bold'
+    ],
+    'text-size': 12,
+    'text-offset': [1, 0],
+    'text-anchor': 'left',
+    'text-allow-overlap': false,
+    'text-ignore-placement': false
+}
+
+const atcDarkDetailedLayout = {
+    'text-field': ['format',
+        ['get', 'Callsign'], { 'text-color': darkTextTheme.primaryText },
+        "\n", {},
+        ['get', 'Frequency'], { 'text-color': darkTextTheme.secondaryText }
+        // " ", {},
+        // ['get', 'callsign'], { 'text-color': lightTextTheme.secondaryText }
     ],
     'text-font': [
         'Open Sans Semibold',
@@ -228,48 +266,84 @@ new MapboxGeocoder({
 );
 
 
-// async function getATCSectors() {
-//     try{
-//         var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/atc/sectors`);
-//         var json = await response.json();
-//         map.addSource('sectors', {
-//                     'type': 'geojson',
-//                     'data': json
-//                 });
-//         // Add a new layer to visualize the polygon.
-//         map.addLayer({
-//         'id': 'sectors',
-//         'type': 'fill',
-//         'source': 'sectors', // reference the data source
-//         'layout': {},
-//         'paint': {
-//         'fill-color': '#0080ff', // blue color fill
-//         'fill-opacity': 0.1
-//         }
-//         });
-//         // Add a black outline around the polygon.
-//         map.addLayer({
-//         'id': 'outline',
-//         'type': 'line',
-//         'source': 'sectors',
-//         'layout': {},
-//         'paint': {
-//         'line-color': '#000',
-//         'line-width': 1
-//         }
-//         });
-//         // // Add sector labels
-//         // json.features.forEach(function(sector){
-//         //     console.log(sector)
-//         //     var marker = new mapboxgl.Marker()
-//         //     .setLngLat(turf.center({geojson: sector}))
-//         //     .addTo(map);
-//         // });
+async function getATCSectors() {
+    try{
+        var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/atc/online`);
+        var json = await response.json();
+
         
-//     }catch(err){
-//         throw Error(err);
-//     }
-// };
+        map.addSource('atcSectors', {
+                    'type': 'geojson',
+                    'data': json
+                });
+        // Add a new layer to visualize the polygon.
+        map.addLayer({
+        'id': 'atcSectors',
+        'type': 'fill',
+        'source': 'atcSectors', // reference the data source
+        'layout': {},
+        'paint': {
+        'fill-color': '#3b8df9', // blue color fill
+        'fill-opacity': 0.1
+        }
+        });
+        // Add a black outline around the polygon.
+        map.addLayer({
+        'id': 'atcOutline',
+        'type': 'line',
+        'source': 'atcSectors',
+        'layout': {},
+        'paint': {
+        'line-color': '#3b8df9',
+        'line-width': 2
+        }
+        });
+        // // Add sector labels
+        var atcLabelPoints = [];
+        json.features.forEach(function(e){
+            console.log(e)
+            atcLabelPoints.push(turf.centroid(e));
+        });
+        console.log(atcLabelPoints);
+        map.addSource('atcLabelPoints', {
+            'type': 'geojson',
+            'data': json
+        });
+        if(theme=="dark"){
+            var mapLayer = map.getLayer('atcPoints');
+
+            if(typeof mapLayer !== 'undefined') {
+                // Remove map layer & source.
+                map.removeLayer('atcPoints');
+            }
+            map.addLayer({
+                'id': 'atcPoints',
+                'type': 'symbol',
+                'source': 'atcLabelPoints',
+                'minzoom': 5,
+                'layout': atcLightDetailedLayout,
+                'paint': lightPaint
+                });
+        }else{
+            var mapLayer = map.getLayer('atcPoints');
+
+            if(typeof mapLayer !== 'undefined') {
+                // Remove map layer & source.
+                map.removeLayer('atcPoints');
+            }
+            map.addLayer({
+                'id': 'atcPoints',
+                'type': 'symbol',
+                'source': 'atcLabelPoints',
+                'minzoom': 5,
+                'layout': atcDarkDetailedLayout,
+                'paint': darkPaint
+            });
+        };
+    }catch(err){
+        // throw Error(err);
+    }
+};
 
 function formatCodeString(string, length){
     const re = (/(\w+\/\w+)|(\w+)/g)
@@ -519,6 +593,7 @@ map.on('load', function () {
     setAsyncInterval(async () => {
         const promise = new Promise((resolve) => {
             if(reload){
+                getATCSectors();
                 getPilots();
                 setPilotMarkers();
                 updatePilotsLayer();

@@ -229,23 +229,70 @@ export async function getVatsimData () {
     return data;
 }
 
-export async function getVatsimAFV (url) {
-    var data = cache.get("vatsimAFV");
-    if (data == undefined) {
-        const res = await fetch(url)
-            .then(res => res.json())
-            .then( data => {
-                return data;
-            })
-            .catch(err => log.error(err));
-        data = res;
+export async function getVatsimAFV () {
+    const vatsimServers = await getVatsimServers();
+    var getUrl = uniqueRandomArray(vatsimServers.data.transceivers);
+    var url = getUrl();
+    log.debug(`VATSIM data URL: ${url}`);
+    var ttlMs = cache.getTtl('getVatsimAFV');
+    let data;
+    // VATSIM data is refreshed every 15s. Check 10s out from expiry.
+    if (ttlMs == undefined || ttlMs - Date.now() <= 10000) {
+        try{
+            // Download fresh VATSIM data
+            if(ttlMs == undefined){
+                // If there is nothing cached - retry forever.
+                const res = await fetch(url, {
+                    retryOptions: {
+                        retryMaxDuration: 30000, // Max 30s retrying
+                        retryInitialDelay: 1000, // 1s initial wait
+                        retryBackoff: 500 // 0.5s backoff
+                    },
+                    headers: {
+                        'User-Agent': userAgent
+                    }
+                })
+                .then(res => res.json())
+                .then( data => {
+                    return data;
+                })
+                log.trace({res: res});
+                data = res;
+            }else{
+                // If there is an old cache, timeout quickly.
+                const res = await fetch(url, {
+                    retryOptions: {
+                        retryMaxDuration: 2000,
+                        retryInitialDelay: 500,
+                        retryBackoff: 1.0 // no backoff
+                    },
+                    headers: {
+                        'User-Agent': userAgent
+                    }
+                })
+                .then(res => res.json())
+                .then( data => {
+                    return data;
+                })
+                log.trace({res: res});
+                data = res;
+            }
         log.info({
             cache: 'set',
             url: url,
             keys: Object.keys(data).length
-        });
-        cache.set("vatsimAFV", data, 15);
+        })
+        cache.set('getVatsimAFV', data, 30);
+        }catch(err){
+            if ( err instanceof FetchError) {
+                // Failed to download - load from cache
+                data = cache.get(url);
+            } else {
+                log.error(err);
+            }
+        };
     }else{
+        data = cache.get('getVatsimAFV');
         log.debug({
             cache: 'get',
             url: url,

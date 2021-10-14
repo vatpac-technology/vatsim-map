@@ -271,9 +271,9 @@ async function getATCSectors() {
             'layout': {},
             'minzoom': 5,
             'paint': {
-            'line-color': "#949494",
+            'line-color': "#33cc99",
             'line-width': 3,
-            'line-dasharray': [10, 8]
+            'line-dasharray': [5, 5]
             }
         });
         map.addLayer({
@@ -283,9 +283,9 @@ async function getATCSectors() {
             'layout': {},
             'minzoom': 5,
             'paint': {
-            'line-color': "#949494",
-            'line-width': 1,
-            'line-dasharray': [2, 2]
+            'line-color': "#3b8df9",
+            'line-width': 3,
+            'line-dasharray': [1, 1]
             }
         });
         map.addLayer({
@@ -329,7 +329,7 @@ async function getATCSectors() {
             'minzoom': 8,
             'layout': twrTmaLayout,
             'paint': {
-                'text-color': "#646464",
+                'text-color': "#33cc99",
             }
         });
 
@@ -340,7 +340,7 @@ async function getATCSectors() {
             'minzoom': 8,
             'layout': twrTmaLayout,
             'paint': {
-                'text-color': "#646464",
+                'text-color': "#3b8df9",
             }
         });
 
