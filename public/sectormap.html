@@ -1,8 +1,8 @@
 <html>
     <head>
         <!-- <title>VATSIM traffic</title> -->
-        <script src='https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.js'></script>
-        <link href='https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.css' rel='stylesheet' />
+        <script src='https://api.mapbox.com/mapbox-gl-js/v2.6.0/mapbox-gl.js'></script>
+        <link href='https://api.mapbox.com/mapbox-gl-js/v2.6.0/mapbox-gl.css' rel='stylesheet' />
         <style>
             body {
               margin: 0;
@@ -28,10 +28,13 @@
             }
             #mgl-map-overlay {
                 position: absolute;
-                top: 10px;
+                bottom: 10px;
                 left: 10px;
                 z-index: 1;
                 background-color: #fff;
+                font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+                padding: 10px;
+                text-align: center;
             }
           </style>
     </head>
@@ -51,15 +54,10 @@
         <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
         <!-- <script src="map-styles.js"></script> -->
-        <!-- <div id='mgl-map-overlay'>
-            <strong>Map key</strong>
-            <ul>
-                <li>Thick solid line: Standard sector boundary</li>
-                <li>Thin solid line: Non-standard sector boundary</li>
-                <li>Thick dashed line: TMA volume boundary</li>
-                <li>Thin dotted line: Tower volume boundary</li>
-            </ul>
-        </div> -->
+        <div id='mgl-map-overlay'>
+            <strong><u>VATPAC Aeronautical Chart</u></strong>
+            <p>Positions Diagram</p>
+        </div>
         <script src="sectormap.js"></script>
     </body>
 </html>
