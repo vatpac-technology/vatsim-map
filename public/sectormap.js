@@ -68,7 +68,7 @@ function mergeBoundaries(sector){
 }
 
 function unionArray(array){
-        const bufferKm = 0.1;
+        const bufferKm = 0.05;
         var featureCollection = turf.featureCollection(array);
         if (featureCollection.length === 0) {
             return null
@@ -114,6 +114,7 @@ async function getATCSectors() {
                 var mergedSector = mergeSectors(sector, sector.responsibleSectors, sectorsJson)
                 stdSectors.push(mergedSector);
             }
+
         });
 
         var upperSectors = [];
@@ -163,14 +164,16 @@ async function getATCSectors() {
                 }
             }
         });
+
         SECTORS = turf.featureCollection(upperSectors.concat(tmaSectors,twrSectors));
         console.log(`debug geojson`)
-        console.log(SECTORS);
+        console.log(stdSectors)
+        //console.log(SECTORS);
 
         map.addSource('std', {
-                    'type': 'geojson',
-                    'data': turf.featureCollection(stdSectors)
-                });
+            'type': 'geojson',
+            'data': turf.featureCollection(stdSectors)
+        });
 
         map.addSource('upper', {
             'type': 'geojson',
@@ -189,9 +192,9 @@ async function getATCSectors() {
 
         const stdLayout = {
             'text-field': ['format',
-                ['get', 'FullName'], {},
-                "\n", {},
-                ['get', 'Callsign'], {},
+                ['get', 'Name'], {},
+                //"\n", {},
+                //['get', 'FullName'], {},
                 "\n", {},
                 ['get', 'Frequency'], {},
             ],
@@ -264,6 +267,7 @@ async function getATCSectors() {
         //         'fill-opacity': 0.1
         //     }
         // });
+
         map.addLayer({
             'id': 'tmaLine',
             'type': 'line',
@@ -276,6 +280,7 @@ async function getATCSectors() {
             'line-dasharray': [5, 5]
             }
         });
+        
         map.addLayer({
             'id': 'twrLine',
             'type': 'line',
@@ -288,6 +293,7 @@ async function getATCSectors() {
             'line-dasharray': [1, 1]
             }
         });
+
         map.addLayer({
             'id': 'upperLine',
             'type': 'line',
@@ -299,6 +305,7 @@ async function getATCSectors() {
             'line-width': 1
             }
         });
+
         map.addLayer({
             'id': 'stdLine',
             'type': 'line',
@@ -311,6 +318,7 @@ async function getATCSectors() {
                 // 'fill-opacity': 0.3
             }
         });
+
         map.addLayer({
             'id': 'upperText',
             'type': 'symbol',
@@ -369,10 +377,17 @@ var map = new mapboxgl.Map({
     container: 'map', // container ID
     // style: 'mapbox://styles/cycloptivity/cksqo94ovrrk517lyn947vqw2',
     style: 'mapbox://styles/cycloptivity/ckrai7rg601cw18p5zu4ntq27',
-    center: [134.9, -28.2 ],
-    zoom: 4.3,
-    // maxZoom: 7,
-    attributionControl: false
+    //center: [134.9, -28.2 ],
+    //zoom: 15,
+    maxZoom: 8,
+    attributionControl: false,
+    /*
+    projection: {
+        name: "lambertConformalConic",
+        center: [130, -25],
+        parallels: [-12, -36.25]
+    }
+    */
 });
 map.dragRotate.disable();
 map.touchZoomRotate.disableRotation();
@@ -388,7 +403,7 @@ async function getDataset() {
     var dataset = await getDataset();
     console.log(dataset);
     map.addControl(new mapboxgl.AttributionControl({
-        customAttribution: `vatSys ${dataset.Profile._attributes.Name} dataset <strong>AIRAC ${dataset.Profile.Version._attributes.AIRAC}${dataset.Profile.Version._attributes.Revision}</strong> | <a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>`
+        customAttribution: `LAMBERT CONFORMAL CONIC WITH TWO STANDARD PARALLELS 12S & 36.25S | vatSys ${dataset.Profile._attributes.Name} dataset <strong>AIRAC ${dataset.Profile.Version._attributes.AIRAC}${dataset.Profile.Version._attributes.Revision}</strong> | <a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>`
     }))
 })();
 
