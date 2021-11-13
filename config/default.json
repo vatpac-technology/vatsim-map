@@ -26,7 +26,7 @@
                 "BN-KEN_CTR",
                 "BN-ISA_CTR",
                 "BN-INL_CTR",
-                "BN-ARM_CTR",
+                "BN-ARL_CTR",
                 "ML-OLW_CTR",
                 "ML-ASP_CTR",
                 "ML-ARM_CTR",
@@ -35,8 +35,9 @@
                 "ML-BIK_CTR",
                 "ML-ELW_CTR",
                 "ML-TAS_CTR",
-                "BN-TSN_FSS",
-                "ML-IND_FSS"
+                "ML-IND_FSS",
+                "AYPM_CTR",
+                "NFFF_FSS"
             ]
         },
         "majorAerodromes": [
