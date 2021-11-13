@@ -3,7 +3,7 @@ import cors from 'cors';
 import { clearCache, cacheStats } from './client.js';
 import {getPilots} from './pilots.js';
 import { getATCSectors, getCoastline, getColours, getOnlinePositions } from './atc.js';
-import { getAerodromes, getMajorAerodromes } from './aerodrome.js';
+import { getAerodromes, getMajorAerodromes, getAerodromeBays } from './aerodrome.js';
 import config from 'config';
 import { getOSMAerodromeData } from './client.js';
 import { getDataset } from './dataset.js';
@@ -77,6 +77,15 @@ app.get('/v1/atc/online', cors(), async (req, res) => {
 
 app.get('/v1/aerodromes', cors(), async (req, res) => {
   var data = await getAerodromes();
+  if(data == false){
+    res.sendStatus(500);
+  }else{
+    res.send(data)
+  }
+});
+
+app.get('/v1/aerodromes/bays', cors(), async (req, res) => {
+  var data = await getAerodromeBays();
   if(data == false){
     res.sendStatus(500);
   }else{
