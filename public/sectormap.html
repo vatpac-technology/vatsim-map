@@ -28,12 +28,12 @@
             }
             #mgl-map-overlay {
                 position: absolute;
-                bottom: 10px;
-                left: 10px;
+                bottom: 0;
+                left: 0;
                 z-index: 1;
                 background-color: #fff;
                 font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-                padding: 10px;
+                padding: 5px;
                 text-align: center;
             }
           </style>
@@ -55,8 +55,23 @@
         <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
         <!-- <script src="map-styles.js"></script> -->
         <div id='mgl-map-overlay'>
-            <strong><u>VATPAC Aeronautical Chart</u></strong>
-            <p>Positions Diagram</p>
+            <img src="/static/vatpac-logo2.png" alt="VATPAC logo" width="50%" height="50%"><br/>
+            <h3><u style="text-decoration: underline; text-decoration-color: #3b8df9; text-decoration-thickness: 3px; text-transform: uppercase;">Aeronautical Chart</u></h3>
+            <strong>Positions Diagram</strong></br>
+            <script>
+                async function getDataset() {
+                    var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/dataset`);
+                    var json = await response.json();
+                    dataset = json;
+                    return json;
+                };
+
+                (async () => {
+                    var dataset = await getDataset();
+                    console.log(dataset);
+                    document.getElementById("mgl-map-overlay").innerHTML += `<p style="color: #ac0000"><strong>AIRAC Date ${dataset.Profile.Version._attributes.PublishDate}</strong> (${dataset.Profile.Version._attributes.AIRAC}${dataset.Profile.Version._attributes.Revision})</p>`;
+                })();
+            </script>
         </div>
         <script src="sectormap.js"></script>
     </body>

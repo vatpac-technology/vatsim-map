@@ -26,6 +26,25 @@ const latlngdmalt = new RegExp(/(?<latRef>[+-])(?<latD>[0-9]{2})(?<latM>[0-9]{2}
 //     ±DDMMSS.SSSS±DDDMMSS.SSSS±AAA.AAA (eg +123456.7-0985432.1+15.9)
 const latlngdmsalt = new RegExp(/(?<latRef>[+-])(?<latD>[0-9]{2})(?<latM>[0-9]{2})(?<latS>[0-9]{2}\.[0-9]+)(?<lonRef>[+-])(?<lonD>[0-9]{3})(?<lonM>[0-9]{2})(?<lonS>[0-9]{2}\.[0-9]+)(?<altitude>[+-][0-9]{1,3}\.[0-9]+)/);
 
+function idl(latitude,longitude){
+    // Partial implementation from https://docs.mapbox.com/mapbox-gl-js/example/line-across-180th-meridian/
+    // To draw a line across the 180th meridian,
+    // if the longitude of the second point minus
+    // the longitude of original (or previous) point is >= 180,
+    // subtract 360 from the longitude of the second point.
+    // If it is less than 180, add 360 to the second point.
+
+    if(longitude > 179 || longitude < -179){
+        console.log({latitude: latitude, longitude: longitude})
+    }
+
+    // Since we don't know about lines, only points we clobber all points to suit Australia.
+    if(longitude < 0){
+        longitude = longitude + 360;
+        console.log(longitude);
+    }
+    return {latitude: latitude, longitude: longitude};
+}
 
 export function iso2dec(string){
     switch(true) {
@@ -47,7 +66,8 @@ export function iso2dec(string){
                 lonRef: (match.groups.lonRef == '+') ? "E" : "W"
             };
             var [ latitude, longitude ] = dms2dec(pos.latitude,pos.latRef,pos.longitude,pos.lonRef);
-            return {latitude: latitude, longitude: longitude};
+            return idl(latitude, longitude)
+            // return {latitude: latitude, longitude: longitude};
         case latlngdmalt.test(string):
             log.debug("Matched DM ALT")
             var match = string.match(latlngdmalt);
@@ -66,7 +86,8 @@ export function iso2dec(string){
                 lonRef: (match.groups.lonRef == '+') ? "E" : "W"
             };
             var [ latitude, longitude ] = dms2dec(pos.latitude,pos.latRef,pos.longitude,pos.lonRef);
-            return {latitude: latitude, longitude: longitude};
+            return idl(latitude, longitude)
+            // return {latitude: latitude, longitude: longitude};
         case latlngdalt.test(string):
             log.debug("Matched D ALT")
             var match = string.match(latlngdalt);
@@ -85,7 +106,8 @@ export function iso2dec(string){
                 lonRef: (match.groups.lonRef == '+') ? "E" : "W"
             };
             var [ latitude, longitude ] = dms2dec(pos.latitude,pos.latRef,pos.longitude,pos.lonRef);
-            return {latitude: latitude, longitude: longitude};
+            return idl(latitude, longitude)
+            // return {latitude: latitude, longitude: longitude};
         case latlngdms.test(string):
             log.debug("Matched DMS")
             var match = string.match(latlngdms);
@@ -104,7 +126,8 @@ export function iso2dec(string){
                 lonRef: (match.groups.lonRef == '+') ? "E" : "W"
             };
             var [ latitude, longitude ] = dms2dec(pos.latitude,pos.latRef,pos.longitude,pos.lonRef);
-            return {latitude: latitude, longitude: longitude};
+            return idl(latitude, longitude)
+            // return {latitude: latitude, longitude: longitude};
         case latlngdm.test(string):
             log.debug("Matched DM")
             var match = string.match(latlngdm);
@@ -123,7 +146,8 @@ export function iso2dec(string){
                 lonRef: (match.groups.lonRef == '+') ? "E" : "W"
             };
             var [ latitude, longitude ] = dms2dec(pos.latitude,pos.latRef,pos.longitude,pos.lonRef);
-            return {latitude: latitude, longitude: longitude};
+            return idl(latitude, longitude)
+            // return {latitude: latitude, longitude: longitude};
         case latlngd.test(string):
             log.debug("Matched D")
             var match = string.match(latlngd);
@@ -142,7 +166,8 @@ export function iso2dec(string){
                 lonRef: (match.groups.lonRef == '+') ? "E" : "W"
             };
             var [ latitude, longitude ] = dms2dec(pos.latitude,pos.latRef,pos.longitude,pos.lonRef);
-            return {latitude: latitude, longitude: longitude};
+            return idl(latitude, longitude)
+            // return {latitude: latitude, longitude: longitude};
         default:
             log.warn('iso2deg failed to match')
             return false;

@@ -367,17 +367,16 @@ var map = new mapboxgl.Map({
     //center: [134.9, -28.2 ],
     //zoom: 15,
     maxZoom: 8,
-    attributionControl: false,
-    /*
-    projection: {
-        name: "lambertConformalConic",
-        center: [130, -25],
-        parallels: [-12, -36.25]
-    }
-    */
+    attributionControl: false
+    // projection: {
+    //     name: "lambertConformalConic",
+    //     center: [130, -25],
+    //     parallels: [-12, -36.25]
+    // }
+    // projection name globe
 });
-map.dragRotate.disable();
-map.touchZoomRotate.disableRotation();
+// map.dragRotate.disable();
+// map.touchZoomRotate.disableRotation();
 
 async function getDataset() {
     var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/dataset`);
@@ -390,7 +389,7 @@ async function getDataset() {
     var dataset = await getDataset();
     console.log(dataset);
     map.addControl(new mapboxgl.AttributionControl({
-        customAttribution: `LAMBERT CONFORMAL CONIC WITH TWO STANDARD PARALLELS 12S & 36.25S | vatSys ${dataset.Profile._attributes.Name} dataset <strong>AIRAC ${dataset.Profile.Version._attributes.AIRAC}${dataset.Profile.Version._attributes.Revision}</strong> | <a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>`
+        customAttribution: `vatSys ${dataset.Profile._attributes.Name} dataset <strong>AIRAC ${dataset.Profile.Version._attributes.AIRAC}${dataset.Profile.Version._attributes.Revision}</strong> | <a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>`
     }))
 })();
 
