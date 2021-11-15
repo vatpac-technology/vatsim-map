@@ -270,38 +270,88 @@ async function getATCSectors() {
     try{
         var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/atc/online`);
         var json = await response.json();
-
+        var ctrs = [];
+        var tmas = [];
+        var twrs = [];
         
-        map.addSource('atcSectors', {
-                    'type': 'geojson',
-                    'data': json
-                });
-        // Add a new layer to visualize the polygon.
-        map.addLayer({
-        'id': 'atcSectors',
-        'type': 'fill',
-        'source': 'atcSectors', // reference the data source
-        'layout': {},
-        'paint': {
-        'fill-color': '#3b8df9', // blue color fill
-        'fill-opacity': 0.1
-        }
+        // Split CTR, TMA, and TWRs
+        json.features.forEach(function(e){
+            console.log(e.properties.Callsign)
+            if(e.properties.Callsign.includes("CTR")){
+                console.log(e)
+                ctrs.push(e);
+            }
+            if(e.properties.Callsign.includes("APP")){
+                console.log(e)
+                tmas.push(e);
+            }
+            if(e.properties.Callsign.includes("TWR")){
+                twrs.push(e);
+            }
         });
+        
+        map.addSource('atcCtrs', {
+            'type': 'geojson',
+            'data': turf.featureCollection(ctrs)
+        });
+        map.addSource('atcTmas', {
+            'type': 'geojson',
+            'data': turf.featureCollection(tmas)
+        });
+        map.addSource('atcTwrs', {
+            'type': 'geojson',
+            'data': turf.featureCollection(twrs)
+        });
+        // Add a new layer to visualize the polygon.
+        // map.addLayer({
+        // 'id': 'atcSectors',
+        // 'type': 'fill',
+        // 'source': 'atcCtrs', // reference the data source
+        // 'layout': {},
+        // 'paint': {
+        // 'fill-color': '#3b8df9', // blue color fill
+        // 'fill-opacity': 0.1
+        // }
+        // });
         // Add a black outline around the polygon.
         map.addLayer({
         'id': 'atcOutline',
         'type': 'line',
-        'source': 'atcSectors',
+        'source': 'atcCtrs',
         'layout': {},
         'paint': {
         'line-color': '#3b8df9',
         'line-width': 2
         }
         });
+        map.addLayer({
+            'id': 'tmaLine',
+            'type': 'line',
+            'source': 'atcTmas',
+            'layout': {},
+            'minzoom': 5,
+            'paint': {
+            'line-color': "#33cc99",
+            'line-width': 3,
+            'line-dasharray': [5, 5]
+            }
+        });
+        map.addLayer({
+            'id': 'twrLine',
+            'type': 'line',
+            'source': 'atcTwrs',
+            'layout': {},
+            'minzoom': 5,
+            'paint': {
+            'line-color': "#3b8df9",
+            'line-width': 3,
+            'line-dasharray': [1, 1]
+            }
+        });
         // // Add sector labels
         var atcLabelPoints = [];
         json.features.forEach(function(e){
-            console.log(e)
+            // console.log(e)
             atcLabelPoints.push(turf.centroid(e));
         });
         console.log(atcLabelPoints);

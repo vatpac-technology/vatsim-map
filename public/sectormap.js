@@ -19,6 +19,9 @@ function getSectorByName(sectorName, json){
             return e;
         };
     });
+    if(sector === undefined){
+        console.log(`Loading sector ${sectorName} failed`);
+    }
     return sector;
 }
 
@@ -33,8 +36,10 @@ function mergeSectors(sector, sectors, json){
         // Union all sector volumes into a polygon
         sectors.forEach(function(e){
             var sector = getSectorByName(e, json);
-            var poly = mergeBoundaries(sector);
-            sectorVolumes.push(poly);
+            if(sector){
+                var poly = mergeBoundaries(sector);
+                sectorVolumes.push(poly);
+            }
         });
         // Add self and union all sector volumes
         sectorVolumes.push(mergeBoundaries(sector));
@@ -119,12 +124,6 @@ async function getATCSectors() {
 
         var upperSectors = [];
         sectorsJson.forEach(sector => {
-            // // Do not filter sub sector volumes
-            // var sector = mergeBoundaries(sector);
-            // if(sector != false){
-            //     allSectors.push(sector);
-            // }
-
             if(sector.Callsign.includes("FSS") ||sector.Callsign.includes("CTR")){
                 var sector = mergeBoundaries(sector);
                 if(sector != false){
@@ -135,12 +134,6 @@ async function getATCSectors() {
 
         var tmaSectors = [];
         sectorsJson.forEach(sector => {
-            // // Do not filter sub sector volumes
-            // var sector = mergeBoundaries(sector);
-            // if(sector != false){
-            //     allSectors.push(sector);
-            // }
-
             if(sector.Callsign.includes("APP")){
                 var sector = mergeBoundaries(sector);
                 if(sector != false){
@@ -151,12 +144,6 @@ async function getATCSectors() {
 
         var twrSectors = [];
         sectorsJson.forEach(sector => {
-            // // Do not filter sub sector volumes
-            // var sector = mergeBoundaries(sector);
-            // if(sector != false){
-            //     allSectors.push(sector);
-            // }
-
             if(sector.Callsign.includes("TWR")){
                 var sector = mergeBoundaries(sector);
                 if(sector != false){

@@ -1,4 +1,4 @@
-import { getOSMAerodromeData } from './client.js';
+import { getOSMAerodromeData, getOSMParkingPositionData } from './client.js';
 import { point, featureCollection } from '@turf/helpers';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import bunyan from 'bunyan';
@@ -8,10 +8,10 @@ var log = bunyan.createLogger({name: config.get('app.name'), level: config.get('
 
 export async function getAerodromes(){
     try{
-        var aerodromes = await getOSMAerodromeData(config.get('data.osm.aerodromesArea'));
-        if(aerodromes){
-            if(aerodromes.type === "FeatureCollection"){
-                return aerodromes;
+        var data = await getOSMAerodromeData(config.get('data.osm.aerodromesArea'));
+        if(data){
+            if(data.type === "FeatureCollection"){
+                return data;
             }else{
                 return false;
             }
@@ -34,4 +34,20 @@ export async function getMajorAerodromes(){
             }
         });
     });
+}
+
+export async function getAerodromeBays(){
+    try{
+        var data = await getOSMParkingPositionData(config.get('data.osm.aerodromesArea'));
+        if(data){
+            if(data.type === "FeatureCollection"){
+                return data;
+            }else{
+                return false;
+            }
+        };
+    }catch(err){
+        log.error(err)
+        return false;
+    }
 }

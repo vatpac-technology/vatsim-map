@@ -6,6 +6,8 @@
   "private": true,
   "dependencies": {
     "@adobe/node-fetch-retry": "^1.1.1",
+    "@mapbox/polylabel": "^1.0.2",
+    "@turf/boolean-intersects": "^6.5.0",
     "@turf/turf": "^6.5.0",
     "async-mutex": "^0.3.2",
     "bunyan": "^1.8.15",
@@ -17,6 +19,7 @@
     "node-fetch": "^2.6.1",
     "query-overpass": "https://github.com/Kahn/query-overpass.git",
     "rgb2hex": "^0.2.5",
+    "sha1": "^1.1.1",
     "unique-random-array": "^3.0.0",
     "xml-js": "^1.6.11"
   },

@@ -9,6 +9,7 @@ import config from 'config';
 import { iso2dec } from './iso2dec.js';
 import {Mutex, Semaphore, withTimeout} from 'async-mutex';
 import uniqueRandomArray from 'unique-random-array';
+import sha1 from 'sha1';
 
 var log = bunyan.createLogger({name: config.get('app.name'), level: config.get('app.log_level')});
 
@@ -108,31 +109,55 @@ async function getVatsimServers(){
 
 export async function getOSMAerodromeData (areaName) {
     log.info(`getOSMAerodromeData`);
+    var data = await queryOverpass(
+        `area["name"="${areaName}"]->.boundaryarea;
+        (
+        nwr(area.boundaryarea)["aeroway"="aerodrome"];
+        );
+        out body;
+        >;
+        out skel qt;`
+    )
+    return data;
+}
+
+export async function getOSMParkingPositionData (areaName) {
+    log.info(`getOSMParkingPositionData`);
+    var data = await queryOverpass(
+        `area["name"="${areaName}"]->.boundaryarea;
+        (
+        nwr(area.boundaryarea)["aeroway"="parking_position"];
+        );
+        out body;
+        >;
+        out skel qt;`
+    )
+    return data;
+}
+
+export async function queryOverpass (query) {
+    var cachekey = sha1(query);
+    log.info(`queryOverpass ${cachekey}`);
+    log.info(query);
     var data = await mutex.runExclusive(async () => {
-        log.info(`mutex locked`);
-        var ttlMs = cache.getTtl(areaName);
+        log.info(`mutex locked ${cachekey}`);
+        var ttlMs = cache.getTtl(cachekey);
         let data;
         if (ttlMs == undefined || ttlMs - Date.now() <= 120000) {
-            log.info(`Querying OSM`);
+            log.info(`Querying OSM ${cachekey}`);
             try{
                 data = await query_overpass(
-                    `area["name"="${areaName}"]->.boundaryarea;
-                    (
-                    nwr(area.boundaryarea)["aeroway"="aerodrome"];
-                    );
-                    out body;
-                    >;
-                    out skel qt;`,
+                    query,
                     function(err, data){
                         if(err){
                             log.error(err);
                         }else{
                             log.info({
                                 cache: 'set',
-                                area: areaName,
+                                cachekey: cachekey,
                                 keys: Object.keys(data).length
                             })
-                            cache.set(areaName, data, 86400);
+                            cache.set(cachekey, data, 86400);
                         }
                     },
                     { overpassUrl: config.get('data.osm.overpassUrl'), userAgent: `${config.get('app.name')}/${config.get('app.version')}` }
@@ -144,10 +169,10 @@ export async function getOSMAerodromeData (areaName) {
             }
         }else{
             log.info(`Return cached OSM response`);
-            data = cache.get(areaName);
+            data = cache.get(cachekey);
             log.info({
                 cache: 'get',
-                area: areaName,
+                cachekey: cachekey,
                 keys: Object.keys(data).length
             })
         }
