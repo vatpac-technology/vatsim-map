@@ -73,7 +73,7 @@ function mergeBoundaries(sector){
 }
 
 function unionArray(array){
-        const bufferKm = 0.05;
+        const bufferKm = 0.2;
         var featureCollection = turf.featureCollection(array);
         if (featureCollection.length === 0) {
             return null
@@ -154,8 +154,7 @@ async function getATCSectors() {
 
         SECTORS = turf.featureCollection(upperSectors.concat(tmaSectors,twrSectors));
         console.log(`debug geojson`)
-        console.log(stdSectors)
-        //console.log(SECTORS);
+        console.log(SECTORS);
 
         map.addSource('std', {
             'type': 'geojson',
@@ -267,7 +266,7 @@ async function getATCSectors() {
             'line-dasharray': [5, 5]
             }
         });
-        
+
         map.addLayer({
             'id': 'twrLine',
             'type': 'line',
@@ -307,6 +306,16 @@ async function getATCSectors() {
         });
 
         map.addLayer({
+          'id': 'stdText',
+          'type': 'symbol',
+          'source': 'std', // reference the data source
+          'layout': stdLayout,
+          'paint': {
+              'text-color': "#000",
+          }
+      });
+
+        map.addLayer({
             'id': 'upperText',
             'type': 'symbol',
             'source': 'upper', // reference the data source
@@ -339,15 +348,7 @@ async function getATCSectors() {
             }
         });
 
-        map.addLayer({
-            'id': 'stdText',
-            'type': 'symbol',
-            'source': 'std', // reference the data source
-            'layout': stdLayout,
-            'paint': {
-                'text-color': "#000",
-            }
-        });
+
 
     }catch(err){
         // throw Error(err);
@@ -387,7 +388,6 @@ async function getDataset() {
 
 (async () => {
     var dataset = await getDataset();
-    console.log(dataset);
     map.addControl(new mapboxgl.AttributionControl({
         customAttribution: `vatSys ${dataset.Profile._attributes.Name} dataset <strong>AIRAC ${dataset.Profile.Version._attributes.AIRAC}${dataset.Profile.Version._attributes.Revision}</strong> | <a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>`
     }))
@@ -397,7 +397,6 @@ async function getDataset() {
 function forwardGeocoder(query) {
     const matchingFeatures = [];
     for (const feature of SECTORS.features) {
-        console.log(feature)
         // Search by callsign
         if (
         feature.properties.Callsign

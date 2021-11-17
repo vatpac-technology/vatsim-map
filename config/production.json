@@ -35,7 +35,10 @@
                 "ML-ELW_CTR",
                 "ML-TAS_CTR",
                 "BN-TSN_FSS",
-                "ML-IND_FSS"
+                "ML-IND_FSS",
+                "NWWW_CTR",
+                "AYPM_CTR",
+                "NVVV_CTR"
             ]
         },
         "majorAerodromes": [
@@ -60,7 +63,8 @@
             "volumesUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Volumes.xml",
             "sectorsUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Sectors.xml",
             "coastlineUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Maps/COAST_ALL.xml",
-            "coloursUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Colours.xml"
+            "coloursUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Colours.xml",
+            "profileUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Profile.xml"
         },
         "osm": {
             "overpassUrl": "https://lz4.overpass-api.de/api/interpreter",

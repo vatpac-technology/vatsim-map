@@ -34,9 +34,12 @@
                 "ML-BIK_CTR",
                 "ML-ELW_CTR",
                 "ML-TAS_CTR",
+                "BN-TSN_FSS",
                 "ML-IND_FSS",
+                "NFFF_FSS",
+                "NWWW_CTR",
                 "AYPM_CTR",
-                "NFFF_FSS"
+                "NVVV_CTR"
             ]
         },
         "majorAerodromes": [

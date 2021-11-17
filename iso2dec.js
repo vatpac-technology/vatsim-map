@@ -39,7 +39,7 @@ function idl(latitude,longitude){
     }
 
     // Since we don't know about lines, only points we clobber all points to suit Australia.
-    if(longitude < 0){
+    if(longitude < -170){
         longitude = longitude + 360;
         console.log(longitude);
     }
