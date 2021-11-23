@@ -329,7 +329,7 @@ export async function getVatsimAFV () {
 
 /**
  * Gets a vatsys XML URL and returns JS object
- * @param {string} url 
+ * @param {string} url
  * @returns Object
  */
  export async function getXMLtoJS (url) {
@@ -390,7 +390,6 @@ export async function getVatsimAFV () {
                 log.error(err);
             }
         };
-        
         log.trace({data: data});
         log.info({
             cache: 'set',
@@ -473,7 +472,6 @@ export async function getLineFeatures (url) {
                 log.error(err);
             }
         };
-        
         log.trace({data: data});
         var features = xmlToFeatures(data);
         log.info({
@@ -494,24 +492,77 @@ export async function getLineFeatures (url) {
     }
 }
 
-function xmlToFeatures (data) {
-    var polys = [];
-    // Take vatSys lines and parse into line array
 
+function createLine(geometry) {
+  // https://docs.mapbox.com/mapbox-gl-js/example/line-across-180th-meridian/
+  // To draw a line across the 180th meridian,
+  // if the longitude of the second point minus
+  // the longitude of original (or previous) point is >= 180,
+  // subtract 360 from the longitude of the second point.
+  // If it is less than 180, add 360 to the second point.
+
+  const startLng = geometry.coordinates[0][0];
+  const endLng = geometry.coordinates[1][0];
+
+  if (endLng - startLng >= 180) {
+    console.log(`createLine cond 1`)
+    geometry.coordinates[1][0] -= 360;
+  } else if (endLng - startLng < 180) {
+    console.log(`createLine cond 2`)
+    geometry.coordinates[1][0] += 360;
+  }
+
+  return geometry;
+  }
+
+function linesToPolygon(obj){
+  var lines = obj._text.split('/');
+  var modifiedLines = [];
+  // Convert ISO to decimal
+  lines.forEach(function(line, index) {
+      var dec = iso2dec(line);
+      this[index] = [dec.longitude, dec.latitude];
+    }, lines);
+  // Modify lines that cross IDL
+  var count = 0;
+  lines.forEach(function(line,index, array){
+    // console.log(line,index,array);
+    if(count === 1){
+      var startPoint = array[index-1];
+      var geometry = {
+        'type': 'LineString',
+        'coordinates': [
+        [startPoint[0], startPoint[1]],
+        [line[0], line[1]]
+        ]
+        };
+      modifiedLines.push(createLine(geometry));
+      count = 0;
+    }else{
+      // Need a pair of points for a line
+      count = count + 1;
+    }
+
+  })
+  // Create GeoJSON poly
+  if(lines.length > 0){
+      return lineToPolygon(modifiedLines,{properties: obj._attributes });
+  }
+}
+
+
+function xmlToFeatures (data) {
+    // Take vatSys lines and parse into GeoJSON features
+    var polys = [];
     if("Volumes" in data){
         // Handle volumes
         try{
             data.Volumes.Boundary.forEach(function(obj){
-                var lines = obj._text.split('/');
-                lines.forEach(function(line, index) {
-                    var dec = iso2dec(line);
-                    this[index] = [dec.longitude, dec.latitude];
-                  }, lines);
-                // Create GeoJSON poly
-                if(lines.length > 0){
-                    polys.push(lineToPolygon(lineString(lines),{mutate: true, properties: obj._attributes }));
-                }
-            })
+              var poly = linesToPolygon(obj);
+              if(poly !== undefined){
+                polys.push(poly);
+              }
+            });
         }catch(err){
             log.error(err);
         }
@@ -521,29 +572,15 @@ function xmlToFeatures (data) {
         // Handle Maps - FIR Boundaries
         try{
             data.Maps.Map.Line.forEach(function(obj){
-                var lines = obj._text.split('/');
-                lines.forEach(function(line, index) {
-                    var dec = iso2dec(line);
-                    this[index] = [dec.longitude, dec.latitude];
-                  }, lines);
-                // Create GeoJSON poly
-                if(lines.length > 0){
-                    polys.push(lineToPolygon(lineString(lines),{ properties: obj._attributes }));
-                }
-            })
+              var poly = linesToPolygon(obj);
+              if(poly !== undefined){
+                polys.push(poly);
+              }
+            });
         }catch(err){
             log.error(err);
             throw err;
         }
     }
-    return polys
+    return polys;
 };
-
-// function firLineToPoly (firs) {
-//     // Line arrays into turf polys
-//     firs.forEach(function(fir){
-//         var poly = turf.lineToPolygon(turf.lineString(fir.line),{mutate: true});
-//         fir.poly = poly;
-//     });
-//     return firs;
-// }

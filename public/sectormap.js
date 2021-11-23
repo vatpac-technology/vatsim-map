@@ -367,7 +367,7 @@ var map = new mapboxgl.Map({
     style: 'mapbox://styles/cycloptivity/ckrai7rg601cw18p5zu4ntq27',
     //center: [134.9, -28.2 ],
     //zoom: 15,
-    maxZoom: 8,
+    maxZoom: 10,
     attributionControl: false
     // projection: {
     //     name: "lambertConformalConic",

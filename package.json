@@ -15,6 +15,7 @@
     "cors": "^2.8.5",
     "dms2dec": "^1.1.0",
     "express": "^4.17.1",
+    "jshint": "^2.13.1",
     "node-cache": "^5.1.2",
     "node-fetch": "^2.6.1",
     "query-overpass": "https://github.com/Kahn/query-overpass.git",

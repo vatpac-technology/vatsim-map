@@ -54,7 +54,7 @@ export async function getATCSectors() {
     // Get volume GeoJSON
     // var volumeBoundaryFeatures = await getLineFeatures(config.get("data.vatsys.volumesUrl"));
     // Boundary = volume.properties.Name
-    var volumesXml = await getXMLtoJS(config.get("data.vatsys.volumesUrl"));
+    var volumesXml = await getLineFeatures(config.get("data.vatsys.volumesUrl"));
     // volume
         // properties
             // Name
