@@ -60,7 +60,7 @@ export async function getATCSectors() {
             // Name
 
     // Get sector details
-    var sectorsXml = await getXMLtoJS(config.get("data.vatsys.sectorsUrl"));
+    var sectorsXml = await getLineFeatures(config.get("data.vatsys.sectorsUrl"));
     // {
     //     _attributes: {
     //       FullName: 'Camden Surface Movement Control',

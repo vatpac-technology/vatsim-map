@@ -1,7 +1,7 @@
 import NodeCache from 'node-cache';
 import fetch from '@adobe/node-fetch-retry';
 import { xml2js } from 'xml-js';
-import { lineToPolygon, lineString } from '@turf/turf';
+import { lineToPolygon, lineString, featureCollection } from '@turf/turf';
 import bunyan from 'bunyan';
 import { FetchError } from 'node-fetch';
 import query_overpass from 'query-overpass';
@@ -517,7 +517,7 @@ function createLine(geometry) {
 
 function linesToPolygon(obj){
   var lines = obj._text.split('/');
-  var modifiedLines = [];
+  var modifiedLines = new featureCollection();
   // Convert ISO to decimal
   lines.forEach(function(line, index) {
       var dec = iso2dec(line);
@@ -536,7 +536,7 @@ function linesToPolygon(obj){
         [line[0], line[1]]
         ]
         };
-      modifiedLines.push(createLine(geometry));
+      modifiedLines.features.push(createLine(geometry));
       count = 0;
     }else{
       // Need a pair of points for a line
@@ -545,8 +545,9 @@ function linesToPolygon(obj){
 
   })
   // Create GeoJSON poly
-  if(lines.length > 0){
-      return lineToPolygon(modifiedLines,{properties: obj._attributes });
+  if(modifiedLines.features.length > 0){
+    var poly = lineToPolygon(modifiedLines,{properties: obj._attributes });
+    return poly;
   }
 }
 
