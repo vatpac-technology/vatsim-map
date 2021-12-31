@@ -2,7 +2,7 @@
     "app": {
         "name": "vatsim-map",
         "version": "0.0.1",
-        "url": "https://github.com/Kahn/vatsim-map",
+        "url": "https://github.com/vatpac-technology/vatsim-map/",
         "log_level": 30,
         "http": {
             "host": "0.0.0.0",
