@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # If you have native dependencies, you'll need extra tools
-RUN apk add --no-cache make gcc g++ python3 git
+RUN apk add --no-cache make gcc g++ python3 git openssh-client
 
 RUN npm ci --prod
 
