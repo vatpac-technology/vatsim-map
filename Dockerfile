@@ -4,10 +4,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # If you have native dependencies, you'll need extra tools
-RUN apk add --no-cache make gcc g++ python3
+RUN apk add --no-cache make gcc g++ python3 git
 
-#RUN npm ci --prod
-RUN npm install
+RUN npm ci --prod
 
 # Then we copy over the modules from above onto a `slim` image
 FROM mhart/alpine-node:slim-12
