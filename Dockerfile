@@ -1,23 +1,19 @@
-# Use official node image as the base image
-FROM node:14-alpine
+FROM node:14
 
-# Set the working directory
-WORKDIR /app
+# Create app directory
+WORKDIR /usr/src/app
 
-# Add the source code to app
-COPY package.json package-lock.json ./
+# Install app dependencies
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
+# where available (npm@5+)
+COPY package*.json ./
 
-# Install all the dependencies
-RUN npm ci --prod
+RUN npm install
+# If you are building your code for production
+# RUN npm ci --only=production
 
-# Stage 2: Serve app
-
-WORKDIR /app
-
-COPY --from=0 /app .
-
+# Bundle app source
 COPY . .
 
 EXPOSE 8080
-
-CMD ["node", "server.js"]
+CMD [ "node", "server.js" ]
