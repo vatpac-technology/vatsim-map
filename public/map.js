@@ -9,8 +9,8 @@ function findGetParameter(parameterName) {
         .substr(1)
         .split("&")
         .forEach(function (item) {
-        tmp = item.split("=");
-        if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
+            tmp = item.split("=");
+            if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
         });
     return result;
 };
@@ -151,27 +151,27 @@ const atcDarkDetailedLayout = {
 const asyncIntervals = [];
 
 const runAsyncInterval = async (cb, interval, intervalIndex) => {
-  await cb();
-  if (asyncIntervals[intervalIndex]) {
-    setTimeout(() => runAsyncInterval(cb, interval, intervalIndex), interval);
-  }
+    await cb();
+    if (asyncIntervals[intervalIndex]) {
+        setTimeout(() => runAsyncInterval(cb, interval, intervalIndex), interval);
+    }
 };
 
 const setAsyncInterval = (cb, interval) => {
-  if (cb && typeof cb === "function") {
-    const intervalIndex = asyncIntervals.length;
-    asyncIntervals.push(true);
-    runAsyncInterval(cb, interval, intervalIndex);
-    return intervalIndex;
-  } else {
-    throw new Error('Callback must be a function');
-  }
+    if (cb && typeof cb === "function") {
+        const intervalIndex = asyncIntervals.length;
+        asyncIntervals.push(true);
+        runAsyncInterval(cb, interval, intervalIndex);
+        return intervalIndex;
+    } else {
+        throw new Error('Callback must be a function');
+    }
 };
 
 const clearAsyncInterval = (intervalIndex) => {
-  if (asyncIntervals[intervalIndex]) {
-    asyncIntervals[intervalIndex] = false;
-  }
+    if (asyncIntervals[intervalIndex]) {
+        asyncIntervals[intervalIndex] = false;
+    }
 };
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiY3ljbG9wdGl2aXR5IiwiYSI6ImNqcDY0NnZnYzBmYjYzd284dzZudmdvZmUifQ.RyR4jd1HRggrbeZRvkv0xg';
@@ -184,18 +184,18 @@ const styleLight = 'mapbox://styles/cycloptivity/ckrai7rg601cw18p5zu4ntq27';
 const styleDark = 'mapbox://styles/cycloptivity/ckrsmmn0623yb17pew9y59lao';
 
 var map = new mapboxgl.Map({
-        container: 'map', // container ID
-        style: styleLight, // style URL
-        center: [134.9, -28.2],
-        zoom:  3,
-        attributionControl: false
+    container: 'map', // container ID
+    style: styleLight, // style URL
+    center: [134.9, -28.2],
+    zoom: 3,
+    attributionControl: false
 });
 map.dragRotate.disable();
 map.touchZoomRotate.disableRotation();
 
 // Light / Dark switch
 var theme = findGetParameter('theme') || 'light';
-if(theme == 'dark'){
+if (theme == 'dark') {
     map.setStyle(styleDark);
 }
 
@@ -208,9 +208,9 @@ async function getDataset() {
 
 async function getPilots() {
     var dataApi = findGetParameter('dataApi');
-    if(dataApi != false){
+    if (dataApi != false) {
         var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/${dataApi}`);
-    }else{
+    } else {
         var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/pilots`);
     }
     var json = await response.json();
@@ -230,9 +230,9 @@ function forwardGeocoder(query) {
     for (const feature of pilots.features) {
         // Search by callsign
         if (
-        feature.properties.pilot.callsign
-        .toLowerCase()
-        .includes(query.toLowerCase())
+            feature.properties.pilot.callsign
+                .toLowerCase()
+                .includes(query.toLowerCase())
         ) {
             feature['place_name'] = `${feature.properties.pilot.callsign}`;
             feature['center'] = feature.geometry.coordinates;
@@ -241,55 +241,58 @@ function forwardGeocoder(query) {
         // Search by pilot
         if (
             feature.properties.pilot.name
-            .toLowerCase()
-            .includes(query.toLowerCase())
-            ) {
-                feature['place_name'] = `${feature.properties.pilot.name}`;
-                feature['center'] = feature.geometry.coordinates;
-                matchingFeatures.push(feature);
-            }
+                .toLowerCase()
+                .includes(query.toLowerCase())
+        ) {
+            feature['place_name'] = `${feature.properties.pilot.name}`;
+            feature['center'] = feature.geometry.coordinates;
+            matchingFeatures.push(feature);
+        }
     }
     return matchingFeatures;
 }
 
 // Add the search control to the map.
-map.addControl(
-new MapboxGeocoder({
-    accessToken: mapboxgl.accessToken,
-    mapboxgl: mapboxgl,
-    localGeocoder: forwardGeocoder,
-    localGeocoderOnly: true,
-    zoom: 12,
-    marker: false,
-    placeholder: 'Find aircraft'
-})
-);
-
+if (findGetParameter('search') == 'false') {
+    //No Search Displayed - search=off removes search
+} else {
+    map.addControl(
+        new MapboxGeocoder({
+            accessToken: mapboxgl.accessToken,
+            mapboxgl: mapboxgl,
+            localGeocoder: forwardGeocoder,
+            localGeocoderOnly: true,
+            zoom: 12,
+            marker: false,
+            placeholder: 'Find aircraft'
+        })
+    );
+}
 
 async function getATCSectors() {
-    try{
+    try {
         var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/atc/online`);
         var json = await response.json();
         var ctrs = [];
         var tmas = [];
         var twrs = [];
-        
+
         // Split CTR, TMA, and TWRs
-        json.features.forEach(function(e){
+        json.features.forEach(function (e) {
             console.log(e.properties.Callsign)
-            if(e.properties.Callsign.includes("CTR")){
+            if (e.properties.Callsign.includes("CTR")) {
                 console.log(e)
                 ctrs.push(e);
             }
-            if(e.properties.Callsign.includes("APP")){
+            if (e.properties.Callsign.includes("APP")) {
                 console.log(e)
                 tmas.push(e);
             }
-            if(e.properties.Callsign.includes("TWR")){
+            if (e.properties.Callsign.includes("TWR")) {
                 twrs.push(e);
             }
         });
-        
+
         map.addSource('atcCtrs', {
             'type': 'geojson',
             'data': turf.featureCollection(ctrs)
@@ -315,14 +318,14 @@ async function getATCSectors() {
         // });
         // Add a black outline around the polygon.
         map.addLayer({
-        'id': 'atcOutline',
-        'type': 'line',
-        'source': 'atcCtrs',
-        'layout': {},
-        'paint': {
-        'line-color': '#3b8df9',
-        'line-width': 2
-        }
+            'id': 'atcOutline',
+            'type': 'line',
+            'source': 'atcCtrs',
+            'layout': {},
+            'paint': {
+                'line-color': '#3b8df9',
+                'line-width': 2
+            }
         });
         map.addLayer({
             'id': 'tmaLine',
@@ -331,9 +334,9 @@ async function getATCSectors() {
             'layout': {},
             'minzoom': 5,
             'paint': {
-            'line-color': "#33cc99",
-            'line-width': 3,
-            'line-dasharray': [5, 5]
+                'line-color': "#33cc99",
+                'line-width': 3,
+                'line-dasharray': [5, 5]
             }
         });
         map.addLayer({
@@ -343,14 +346,14 @@ async function getATCSectors() {
             'layout': {},
             'minzoom': 5,
             'paint': {
-            'line-color': "#3b8df9",
-            'line-width': 3,
-            'line-dasharray': [1, 1]
+                'line-color': "#3b8df9",
+                'line-width': 3,
+                'line-dasharray': [1, 1]
             }
         });
         // // Add sector labels
         var atcLabelPoints = [];
-        json.features.forEach(function(e){
+        json.features.forEach(function (e) {
             // console.log(e)
             atcLabelPoints.push(turf.centroid(e));
         });
@@ -359,10 +362,10 @@ async function getATCSectors() {
             'type': 'geojson',
             'data': json
         });
-        if(theme=="dark"){
+        if (theme == "dark") {
             var mapLayer = map.getLayer('atcPoints');
 
-            if(typeof mapLayer !== 'undefined') {
+            if (typeof mapLayer !== 'undefined') {
                 // Remove map layer & source.
                 map.removeLayer('atcPoints');
             }
@@ -373,11 +376,11 @@ async function getATCSectors() {
                 'minzoom': 5,
                 'layout': atcLightDetailedLayout,
                 'paint': lightPaint
-                });
-        }else{
+            });
+        } else {
             var mapLayer = map.getLayer('atcPoints');
 
-            if(typeof mapLayer !== 'undefined') {
+            if (typeof mapLayer !== 'undefined') {
                 // Remove map layer & source.
                 map.removeLayer('atcPoints');
             }
@@ -390,131 +393,131 @@ async function getATCSectors() {
                 'paint': darkPaint
             });
         };
-    }catch(err){
+    } catch (err) {
         // throw Error(err);
     }
 };
 
-function formatCodeString(string, length){
+function formatCodeString(string, length) {
     const re = (/(\w+\/\w+)|(\w+)/g)
     var resString = '';
-    try{
+    try {
         var matches = [...string.matchAll(re)];
         const lineLen = length;
         var count = 1;
         for (const match of matches) {
-            if(count < lineLen){
-                if(resString == "") {
+            if (count < lineLen) {
+                if (resString == "") {
                     resString = match[0];
                     count++;
-                }else{
+                } else {
                     resString = resString + ' ' + match[0];
                     count++;
                 }
-            }else{
-                resString = resString + ' ' +  match[0] + '\n    ';
+            } else {
+                resString = resString + ' ' + match[0] + '\n    ';
                 count = 0;
             }
         }
         resString.replace(/\n+$/, "");
         return resString;
-    }catch(err){
+    } catch (err) {
         console.log(err)
     };
 }
 
-function formatTypeString(string){
-    try{
+function formatTypeString(string) {
+    try {
         var slash = string.split('/');
         var hyphen = slash[1].split('-')
 
-        if (hyphen[1] == undefined){
+        if (hyphen[1] == undefined) {
             // FAA types
             var wake = "NIL";
-        }else{
+        } else {
             // Parse ICAO formats
             var wake = (hyphen[0] == "J" || hyphen[0] == "H" || hyphen[0] == "M" || hyphen[0] == "L" ? hyphen[0] : "NIL");
             var equipment = (hyphen[1] == undefined ? "NIL" : hyphen[1]);
         }
         return [slash[0], wake, equipment];
-    }catch(err){
-        if(err instanceof TypeError){
+    } catch (err) {
+        if (err instanceof TypeError) {
             // Something failed to parse - throw it back in the aircraft string
             return [string, "NIL", "NIL"];
-        }else{
+        } else {
             console.log(`Failed parsing formatTypeString` + err)
         }
     }
 }
 
-function formatAltString(string){
+function formatAltString(string) {
     const transistionAltitudeThousands = 100;
     var alt = 0;
     var fl = string.split('FL')
     alt = (fl[1] == undefined ? fl[0] : fl[1]);
-    alt = alt/100; // 33000 -> 330, 1000 -> 10, 340 -> 3.4
+    alt = alt / 100; // 33000 -> 330, 1000 -> 10, 340 -> 3.4
     // Altitudes less than 500ft are probably not legal anyway (lets assume no one on VATSIM has LL approval),
     //  more likely they entered their FPL alt in FL. Fix the dumb here. PS: Sorry CONC
-    if(alt <= 5){
+    if (alt <= 5) {
         alt = alt * 100;
     }
-    if (alt == 100){
+    if (alt == 100) {
         return 'A100';
-    }else{
-        return (alt <= transistionAltitudeThousands ? 'A0'+alt : 'F'+alt);
+    } else {
+        return (alt <= transistionAltitudeThousands ? 'A0' + alt : 'F' + alt);
     };
 };
 
-async function updatePilotsLayer () {
+async function updatePilotsLayer() {
     // Update labels layer
-    try{
+    try {
         map.getSource('aircraftMarkersSource').setData(pilots);
-    }catch(err){
+    } catch (err) {
         console.log(err);
     }
 }
 
 function setPilotsLayer() {
-    if(theme=="dark"){
+    if (theme == "dark") {
         var mapLayer = map.getLayer('aircraftLabels');
 
-        if(typeof mapLayer !== 'undefined') {
-        // Remove map layer & source.
-        map.removeLayer('aircraftLabels');
+        if (typeof mapLayer !== 'undefined') {
+            // Remove map layer & source.
+            map.removeLayer('aircraftLabels');
         }
 
         map.addLayer({
-        'id': 'aircraftLabels',
-        'type': 'symbol',
-        'source': 'aircraftMarkersSource',
-        'minzoom': 4,
-        'layout': lightDetailedLayout,
-        'paint': lightPaint
+            'id': 'aircraftLabels',
+            'type': 'symbol',
+            'source': 'aircraftMarkersSource',
+            'minzoom': 4,
+            'layout': lightDetailedLayout,
+            'paint': lightPaint
         });
-    }else{
+    } else {
         var mapLayer = map.getLayer('aircraftLabels');
 
-        if(typeof mapLayer !== 'undefined') {
-        // Remove map layer & source.
-        map.removeLayer('aircraftLabels');
+        if (typeof mapLayer !== 'undefined') {
+            // Remove map layer & source.
+            map.removeLayer('aircraftLabels');
         }
         // Callsign only
         map.addLayer({
-        'id': 'aircraftLabels',
-        'type': 'symbol',
-        'source': 'aircraftMarkersSource',
-        'minzoom': 4,
-        'layout': darkDetailedLayout,
-        'paint': darkPaint
+            'id': 'aircraftLabels',
+            'type': 'symbol',
+            'source': 'aircraftMarkersSource',
+            'minzoom': 4,
+            'layout': darkDetailedLayout,
+            'paint': darkPaint
         });
     };
 }
 
-async function setPilotMarkers () {
+async function setPilotMarkers() {
     let popup;
-    try{
+    try {
         // Redraw markers if already set
-        if (markers!==null) {
+        if (markers !== null) {
             for (var i = markers.length - 1; i >= 0; i--) {
                 markers[i].remove();
             }
@@ -523,13 +526,13 @@ async function setPilotMarkers () {
         for (const marker of pilots.features) {
 
             // Create popup for each Marker
-            if(marker.properties.pilot.flight_plan != undefined){
+            if (marker.properties.pilot.flight_plan != undefined) {
                 // Flight plan exists
                 var flightRules = (marker.properties.pilot.flight_plan.flight_rules == "I" ? "IFR" : "VFR");
-                var [aircraft, wake, equipment ] = formatTypeString(marker.properties.pilot.flight_plan.aircraft);
+                var [aircraft, wake, equipment] = formatTypeString(marker.properties.pilot.flight_plan.aircraft);
 
                 popup = new mapboxgl.Popup({ offset: 0 }).setHTML(
-                `
+                    `
                 <div id="popup-content">
                 <strong>Pilot details</strong><br />
                 Callsign: <a href="https://stats.vatsim.net/search/${marker.properties.pilot.callsign}" target="_blank"><strong>${marker.properties.pilot.callsign}</strong></a>
@@ -549,10 +552,10 @@ async function setPilotMarkers () {
                 </div>
                 `
                 );
-            }else{
+            } else {
                 // No flightplan for the pilot.
                 popup = new mapboxgl.Popup({ offset: 0 }).setHTML(
-                `
+                    `
                 <div id="popup-content">
                 <strong>Pilot details</strong><br />
                 Callsign: <a href="https://stats.vatsim.net/search/${marker.properties.pilot.callsign}" target="_blank"><strong>${marker.properties.pilot.callsign}</strong></a>
@@ -572,20 +575,20 @@ async function setPilotMarkers () {
             const el = document.createElement('div');
             el.id = marker.properties.pilot.callsign;
             el.className = 'marker';
-            if(gaIcon == true){
+            if (gaIcon == true) {
                 el.style.width = `12px`;
                 el.style.height = `12px`;
-                if(theme=="dark"){
+                if (theme == "dark") {
                     el.style.backgroundImage = `url(${window.location.protocol}//${window.location.hostname}:${window.location.port}/static/flaticon.com/freepik/ga-dark.png)`;
-                }else{
+                } else {
                     el.style.backgroundImage = `url(${window.location.protocol}//${window.location.hostname}:${window.location.port}/static/flaticon.com/freepik/ga-light.png)`;
                 }
-            }else{
+            } else {
                 el.style.width = `15px`;
                 el.style.height = `15px`;
-                if(theme=="dark"){
+                if (theme == "dark") {
                     el.style.backgroundImage = `url(${window.location.protocol}//${window.location.hostname}:${window.location.port}/static/fontawesome/jet-dark.png)`;
-                }else{
+                } else {
                     el.style.backgroundImage = `url(${window.location.protocol}//${window.location.hostname}:${window.location.port}/static/fontawesome/jet-light.png)`;
                 }
             }
@@ -610,7 +613,7 @@ async function setPilotMarkers () {
                 reload = true;
             });
         }
-    }catch(err){
+    } catch (err) {
         console.log(err)
     }
 };
@@ -618,11 +621,11 @@ async function setPilotMarkers () {
 getPilots();
 
 (async () => {
-var dataset = await getDataset();
-console.log(dataset);
-map.addControl(new mapboxgl.AttributionControl({
-    customAttribution: `vatSys ${dataset.Profile._attributes.Name} dataset <strong>AIRAC ${dataset.Profile.Version._attributes.AIRAC}${dataset.Profile.Version._attributes.Revision}</strong> | <a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>`
-}))
+    var dataset = await getDataset();
+    console.log(dataset);
+    map.addControl(new mapboxgl.AttributionControl({
+        customAttribution: `vatSys ${dataset.Profile._attributes.Name} dataset <strong>AIRAC ${dataset.Profile.Version._attributes.AIRAC}${dataset.Profile.Version._attributes.Revision}</strong> | <a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>`
+    }))
 })();
 
 map.on('load', function () {
@@ -632,8 +635,8 @@ map.on('load', function () {
     });
 
     map.jumpTo({
-        center: [findGetParameter('lon') || 134.9, findGetParameter('lat') || -28.2 ],
-        zoom:  findGetParameter('zoom') || 3,
+        center: [findGetParameter('lon') || 134.9, findGetParameter('lat') || -28.2],
+        zoom: findGetParameter('zoom') || 3,
     })
 
     setPilotsLayer();
@@ -642,17 +645,17 @@ map.on('load', function () {
     // Main loop
     setAsyncInterval(async () => {
         const promise = new Promise((resolve) => {
-            if(reload){
+            if (reload) {
                 getATCSectors();
                 getPilots();
                 setPilotMarkers();
                 updatePilotsLayer();
-            }else{
+            } else {
                 console.log('Reload inhibited')
             }
             setTimeout(resolve(), redrawTimeoutMs);
         });
         await promise;
-      }, redrawTimeoutMs);
+    }, redrawTimeoutMs);
 });
 
