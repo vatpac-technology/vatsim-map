@@ -40,6 +40,22 @@
                 "NWWW_CTR",
                 "AYPM_CTR",
                 "NVVV_CTR"
+            ],
+            "border": [
+                "NZZO_FSS",
+                "ZAK_E_FSS",
+                "ZAK_W_FSS",
+                "FAKO_FSS",
+                "WAAF_CTR",
+                "WAAF_B_CTR",
+                "WIIF_E_CTR",
+                "WIIF_W_CTR",
+                "VCCF_CTR",
+                "VRMF_CTR",
+                "FIMM_CTR",
+                "FAJO_FSS",
+                "NZCM_FSS",
+                "NSFA_FSS"
             ]
         },
         "majorAerodromes": [

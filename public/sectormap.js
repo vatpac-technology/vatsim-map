@@ -122,6 +122,17 @@ async function getATCSectors() {
 
         });
 
+        var borderSectors = [];
+        sectorsJson.forEach(sector => {
+            if(sector.border_position === true){
+                var sector = mergeBoundaries(sector);
+                if(sector != false){
+                    borderSectors.push(sector);
+                }
+            }
+
+        });
+
         var upperSectors = [];
         sectorsJson.forEach(sector => {
             if(sector.Callsign.includes("FSS") ||sector.Callsign.includes("CTR")){
@@ -159,6 +170,11 @@ async function getATCSectors() {
         map.addSource('std', {
             'type': 'geojson',
             'data': turf.featureCollection(stdSectors)
+        });
+
+        map.addSource('border', {
+            'type': 'geojson',
+            'data': turf.featureCollection(borderSectors)
         });
 
         map.addSource('upper', {
@@ -293,6 +309,18 @@ async function getATCSectors() {
         });
 
         map.addLayer({
+            'id': 'borderLine',
+            'type': 'line',
+            'source': 'border',
+            'layout': {},
+            //'minzoom': 5,
+            'paint': {
+                'line-color': "#949494",
+                'line-width': 4
+            }
+        });
+
+        map.addLayer({
             'id': 'stdLine',
             'type': 'line',
             'source': 'std', // reference the data source
@@ -313,7 +341,17 @@ async function getATCSectors() {
           'paint': {
               'text-color': "#000",
           }
-      });
+        });
+
+        map.addLayer({
+            'id': 'borderText',
+            'type': 'symbol',
+            'source': 'border', // reference the data source
+            'layout': stdLayout,
+            'paint': {
+                'text-color': "#646464",
+            }
+        });
 
         map.addLayer({
             'id': 'upperText',

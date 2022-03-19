@@ -89,6 +89,9 @@ export async function getATCSectors() {
         if (config.get("map.sectors.standard").includes(sector.Callsign)){
             sector.standard_position = true;
         }
+        if (config.get("map.sectors.border").includes(sector.Callsign)){
+            sector.border_position = true;
+        }
         sectors.push(sector);
     });
     return sectors;
