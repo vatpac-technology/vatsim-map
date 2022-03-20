@@ -1,78 +1,121 @@
 <html>
-    <head>
-        <!-- <title>VATSIM traffic</title> -->
-        <script src='https://api.mapbox.com/mapbox-gl-js/v2.6.0/mapbox-gl.js'></script>
-        <link href='https://api.mapbox.com/mapbox-gl-js/v2.6.0/mapbox-gl.css' rel='stylesheet' />
-        <style>
-            body {
-              margin: 0;
-              padding: 0;
-            }
-      
-            #map {
-              position: absolute;
-              top: 0;
-              bottom: 0;
-              width: 100%;
-              z-index: 0;
-            }
 
-            .mapboxgl-popup-content {
-                width: max-content;
-            }
+<head>
+    <!-- <title>VATSIM traffic</title> -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.6.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.6.0/mapbox-gl.css' rel='stylesheet' />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400;500;800&family=Ubuntu:wght@300&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
 
-            pre, pre code {
-                font-size: 10pt;
-                /* line-height: 1.4; */
-                white-space: pre-line;
-            }
-            #mgl-map-overlay {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                z-index: 1;
-                background-color: #fff;
-                font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-                padding: 5px;
-                text-align: center;
-            }
-          </style>
-    </head>
-    <body>
-        <div id='map'></div>
-        <!-- <nav id="listing-group" class="listing-group">
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            z-index: 0;
+        }
+
+        .mapboxgl-popup-content {
+            width: max-content;
+        }
+
+        pre,
+        pre code {
+            font-size: 10pt;
+            /* line-height: 1.4; */
+            white-space: pre-line;
+        }
+
+        #mgl-map-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            z-index: 1;
+            background-color: #fff;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .btn {
+            position: absolute;
+            top: 0.4em;
+            left: 0.4em;
+            background: white;
+            color: black;
+            outline: 3px;
+            border-radius: 1em;
+            padding: 4px;
+            font: inherit;
+        }
+
+        .closed {
+           
+            padding-top: 1.8em !important;
+            /* width: 33px; */
+        }
+
+        .hidden {
+            display: none;
+            
+        }
+
+        .icon {
+            transition: all;
+            transition-duration: 200ms;
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+
+<body>
+    <div id='map'></div>
+    <!-- <nav id="listing-group" class="listing-group">
             <input type="checkbox" id="declutter" checked="checked">
             <label for="declutter">Declutter</label>
         </nav> -->
-        <script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
-        <!-- Load the `mapbox-gl-geocoder` plugin. -->
-        <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
-        <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" type="text/css">
-        
-        <!-- Promise polyfill script is required -->
-        <!-- to use Mapbox GL Geocoder in IE 11. -->
-        <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
-        <!-- <script src="map-styles.js"></script> -->
-        <div id='mgl-map-overlay'>
-            <img src="/static/vatpac-logo2.png" alt="VATPAC logo" width="50%" height="50%"><br/>
-            <h3><u style="text-decoration: underline; text-decoration-color: #3b8df9; text-decoration-thickness: 3px; text-transform: uppercase;">Aeronautical Chart</u></h3>
-            <strong>Positions Diagram</strong></br>
-            <script>
-                async function getDataset() {
-                    var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/dataset`);
-                    var json = await response.json();
-                    dataset = json;
-                    return json;
-                };
+    <script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
+    <!-- Load the `mapbox-gl-geocoder` plugin. -->
+    <script
+        src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
+    <link rel="stylesheet"
+        href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css"
+        type="text/css">
 
-                (async () => {
-                    var dataset = await getDataset();
-                    console.log(dataset);
-                    document.getElementById("mgl-map-overlay").innerHTML += `<p style="color: #ac0000"><strong>AIRAC Date ${dataset.Profile.Version._attributes.PublishDate}</strong> (${dataset.Profile.Version._attributes.AIRAC}${dataset.Profile.Version._attributes.Revision})</p>`;
-                })();
-            </script>
+    <!-- Promise polyfill script is required -->
+    <!-- to use Mapbox GL Geocoder in IE 11. -->
+    <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
+    <!-- <script src="map-styles.js"></script> -->
+    <div id='mgl-map-overlay' style="border-radius: 1em; margin-bottom: 1em; margin-left: 1em; box-shadow: 1em;">
+        <button class="btn" id="toggleButton" onclick="toggleBox()"><svg xmlns="http://www.w3.org/2000/svg" width="24"
+                height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left">
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+            </svg>
+        </button>
+        <div id="boxBody">
+            <img src="/static/vatpac-logo2.png" alt="VATPAC logo" width="50%" height="50%"
+                style="padding-top: 12px;"><br />
+            <h3><u
+                    style="text-decoration: underline; text-decoration-color: #3b8df9; text-decoration-thickness: 3px; text-transform: uppercase;">Aeronautical
+                    Chart</u></h3>Positions Diagram</br>
+            <!--Dataset goes here. In sectormap.js-->
         </div>
-        <script src="sectormap.js"></script>
-    </body>
+    </div>
+
+    <script src="sectormap.js"></script>
+</body>
+
+
 </html>
