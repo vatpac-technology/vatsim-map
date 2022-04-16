@@ -111,26 +111,21 @@ function mergeBoundaries(sector) {
     }
 }
 
-function unionArray(array) {
-    const bufferKm = 0.2;
+function unionArray(array){
     var featureCollection = turf.featureCollection(array);
     if (featureCollection.length === 0) {
         return null
     }
-    // buffer is a dirty dirty hack to close up some holes in datasets
-    let ret = turf.buffer(featureCollection.features[0], bufferKm, { units: 'kilometers' });
-    // let ret = featureCollection.features[0];
+    let ret = featureCollection.features[0];
 
     turf.featureEach(featureCollection, function (currentFeature, featureIndex) {
         if (featureIndex > 0) {
-            ret = turf.union(ret, turf.buffer(currentFeature, bufferKm, { units: 'kilometers' }))
-            // ret = turf.union(ret, currentFeature);
+            ret = turf.union(ret, currentFeature);
         }
     });
 
     // Remove any holes added in union
     ret.geometry.coordinates.length = 1;
-
     return ret;
 };
 
@@ -184,7 +179,7 @@ async function getATCSectors() {
 
         var tmaSectors = [];
         sectorsJson.forEach(sector => {
-            if (sector.Callsign.includes("APP")) {
+            if (sector.Callsign.includes("APP") || sector.Callsign.includes("DEP")) {
                 var sector = mergeBoundaries(sector);
                 if (sector != false) {
                     tmaSectors.push(sector);
