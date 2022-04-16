@@ -25,14 +25,23 @@ Route `/flights/`
 #### Arivals
 
 Route `/arrivals/<ICAO code>`
-Returns `[pilot]`
+Returns
+- 200 `[pilot]`
+- 404
+- 500
 
 #### Callsign
 
 Route `/callsign/<callsign>`
-Returns `{pilot}`
+Returns
+- 200 `{pilot}`
+- 404
+- 500
 
 #### Departures
 
 Route `/departures/<ICAO code>`
-Returns `[pilot]`
+Returns
+- 200 `[pilot]`
+- 404
+- 500

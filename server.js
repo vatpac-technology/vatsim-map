@@ -56,6 +56,8 @@ app.get('/v1/flights/callsign/:callsign', cors(), async (req, res) => {
   const feature = pilots.features.find(e => e.properties.pilot.callsign === req.params.callsign)
   if(feature == false){
     res.sendStatus(500);
+  } else if(feature == undefined){
+    res.sendStatus(404);
   }else{
     res.send(feature.properties.pilot)
   }
