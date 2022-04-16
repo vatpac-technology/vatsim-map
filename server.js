@@ -93,6 +93,21 @@ app.get('/v1/flights/departures/:icaoCode', cors(), async (req, res) => {
   }
 });
 
+app.get('/v1/atc/sectors', cors(), async (req, res) => {
+  var standardOnly = (req.query.standardOnly == undefined ? false : req.query.standardOnly.toString());
+  var sectors = await getATCSectors();
+  if (standardOnly == "true"){
+    sectors = sectors.filter(function(sector) {
+      return sector.standard_position===true;
+    });
+  }
+  if(sectors == false){
+    res.sendStatus(500);
+  }else{
+    res.send(sectors)
+  }
+});
+
 app.get('/v1/atc/online', cors(), async (req, res) => {
   var sectors = await getOnlinePositions();
   if(sectors == false){
