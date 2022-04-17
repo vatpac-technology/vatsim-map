@@ -84,7 +84,7 @@
             "profileUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Profile.xml"
         },
         "osm": {
-            "overpassUrl": "https://lz4.overpass-api.de/api/interpreter",
+            "overpassUrl": "https://overpass.kumi.systems/api/interpreter",
             "aerodromesArea": "Australia"
         }
     }

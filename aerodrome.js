@@ -23,17 +23,20 @@ export async function getAerodromes(){
 }
 
 export async function getMajorAerodromes(){
-    const config = config.get('map.majorAerodromes')
-    var aerodromes = getAerodromes();
+    const aerodromeConfig = config.get('map.majorAerodromes')
+    var aerodromes = await getAerodromes();
     var majorAerodromes = [];
 
-    aerodromes.forEach(function(element){
-        config.forEach(function(majorIcao){
-            if(element.properties.tags.icao==majorIcao){
-                majorAerodromes.push(element);
-            }
+    try{
+        aerodromes.features.forEach(function(element){
+            aerodromeConfig.forEach(function(majorIcao){
+                if(element.properties.tags.icao==majorIcao){
+                    majorAerodromes.push(element);
+                }
+            });
         });
-    });
+    }catch(e){}
+    return majorAerodromes;
 }
 
 export async function getAerodromeBays(){

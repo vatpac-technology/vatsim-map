@@ -1,11 +1,10 @@
 import express from 'express';
 import cors from 'cors';
-import { clearCache, cacheStats } from './client.js';
+import { clearCache, cacheStats, getVatsimData, getOSMAerodromeData } from './client.js';
 import {getPilots} from './pilots.js';
 import { getATCSectors, getCoastline, getColours, getOnlinePositions } from './atc.js';
 import { getAerodromes, getMajorAerodromes, getAerodromeBays } from './aerodrome.js';
 import config from 'config';
-import { getOSMAerodromeData } from './client.js';
 import { getDataset } from './dataset.js';
 
 const app = express()

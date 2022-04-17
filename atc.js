@@ -255,60 +255,65 @@ export async function getOnlinePositions() {
     var sectors = await getATCSectors();
     var stations = await getVatsimAFV();
 
-    // SY_APP 124.400 AFV 124400000
-    // iterate txvrs.element.transceivers.element frequency/1000000
-    stations.forEach(function(station, index){
-        var activePosition = false;
-        // Keep only CTR, APP, and TWR
-        if(station.callsign.toUpperCase().includes("CTR") === false && station.callsign.toUpperCase().includes("APP") === false && station.callsign.toUpperCase().includes("TWR") === false){
-            delete stations[index];
-        }else{
-            var activeFrequncies = [];
-            // Transform frequencies array
-            station.transceivers.forEach(function(element){
-                // Hertz to Megahurts
-                element.frequency = element.frequency/1000000;
-                activeFrequncies.push(element.frequency);
-            })
-            activeFrequncies = uniq(activeFrequncies);
-
-            // Join sectors by callsign
-            var sector = sectors.find(function cb(element){
-                if(element.Callsign === station.callsign){
-                    // Check std sectors and load sub sectors.
-                    if(element.standard_position === true){
-                        var sectorWithSubsectors = mergeSectors(element, element.responsibleSectors,sectors);
-                        return sectorWithSubsectors;
-                    }else{
-                        return element;
-                    }
-                };
-            });
-            if(sector !== undefined){
-                onlineSectors.push(mergeBoundaries(sector));
-                activePosition = mergeBoundaries(sector);
-            }
-
-            if(activePosition !== false){
-                // Join sectors by frequency
-                // TODO - How to incrementally add sectors working outwards from the logged on sector?
-                var extendedPoly = activePosition;
-                activeFrequncies.forEach(function(element){
-                    var adjacentSector = isAdjacentSector(element, extendedPoly, sectors);
-                    if(adjacentSector !== false){
-                        extendedPoly = unionArray([extendedPoly, sectorWithSubsectors])
-                        if(adjacentSector.standard_position === true){
-                            var sectorWithSubsectors = mergeSectors(adjacentSector, adjacentSector.responsibleSectors,sectors);
-                            onlineSectors.push(sectorWithSubsectors);
-                        }else{
-                            onlineSectors.push(mergeBoundaries(adjacentSector));
-                        }
-                    }
+    try{
+        // SY_APP 124.400 AFV 124400000
+        // iterate txvrs.element.transceivers.element frequency/1000000
+        stations.forEach(function(station, index){
+            var activePosition = false;
+            // Keep only CTR, APP, and TWR
+            if(station.callsign.toUpperCase().includes("CTR") === false && station.callsign.toUpperCase().includes("APP") === false && station.callsign.toUpperCase().includes("DEP") === false && station.callsign.toUpperCase().includes("TWR") === false){
+                delete stations[index];
+            }else{
+                var activeFrequncies = [];
+                // Transform frequencies array
+                station.transceivers.forEach(function(element){
+                    // Hertz to Megahurts
+                    element.frequency = element.frequency/1000000;
+                    activeFrequncies.push(element.frequency);
                 })
+                activeFrequncies = uniq(activeFrequncies);
+    
+                // Join sectors by callsign
+                var sector = sectors.find(function cb(element){
+                    if(element.Callsign === station.callsign){
+                        // Check std sectors and load sub sectors.
+                        if(element.standard_position === true){
+                            var sectorWithSubsectors = mergeSectors(element, element.responsibleSectors,sectors);
+                            return sectorWithSubsectors;
+                        }else{
+                            return element;
+                        }
+                    };
+                });
+                if(sector !== undefined){
+                    onlineSectors.push(mergeBoundaries(sector));
+                    activePosition = mergeBoundaries(sector);
+                }
+    
+                if(activePosition !== false){
+                    // Join sectors by frequency
+                    // TODO - How to incrementally add sectors working outwards from the logged on sector?
+                    var extendedPoly = activePosition;
+                    activeFrequncies.forEach(function(element){
+                        var adjacentSector = isAdjacentSector(element, extendedPoly, sectors);
+                        if(adjacentSector !== false && sectorWithSubsectors !== undefined){
+                            extendedPoly = unionArray([extendedPoly, sectorWithSubsectors])
+                            if(adjacentSector.standard_position === true){
+                                var sectorWithSubsectors = mergeSectors(adjacentSector, adjacentSector.responsibleSectors,sectors);
+                                onlineSectors.push(sectorWithSubsectors);
+                            }else{
+                                onlineSectors.push(mergeBoundaries(adjacentSector));
+                            }
+                        }
+                    })
+                }
             }
-        }
-    })
-
-
-    return featureCollection(uniq(onlineSectors));
+        })
+    
+    
+        return featureCollection(uniq(onlineSectors));
+    }catch(e){
+        return false;
+    }
+   
 }

@@ -55,9 +55,9 @@ function formatAltString(string){
     alt = string/100; // 33000 -> 330, 1000 -> 10, 340 -> 3.4
     // Altitudes less than 500ft are probably not legal anyway (lets assume no one on VATSIM has LL approval),
     //  more likely they entered their FPL alt in FL. Fix the dumb here. PS: Sorry CONC
-    if(alt <= 5){
-        alt = alt * 100;
-    }
+    // if(alt <= 5){
+    //     alt = alt * 100;
+    // }
     if (alt == 100){
         return 'A100';
     }else{

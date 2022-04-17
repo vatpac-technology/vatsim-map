@@ -178,7 +178,9 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiY3ljbG9wdGl2aXR5IiwiYSI6ImNqcDY0NnZnYzBmYjYzd
 var markers = [];
 var reload = true;
 var redrawTimeoutMs = 5000;
-var pilots = false;
+var PILOTS = false;
+var AERODROMES = false;
+var MAJOR_AERODROMES = false;
 
 const styleLight = 'mapbox://styles/cycloptivity/ckrai7rg601cw18p5zu4ntq27';
 const styleDark = 'mapbox://styles/cycloptivity/ckrsmmn0623yb17pew9y59lao';
@@ -214,13 +216,21 @@ async function getPilots() {
         var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/pilots`);
     }
     var json = await response.json();
-    pilots = json;
+    PILOTS = json;
+    return json;
+};
+
+async function getAerodromes() {
+    var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/aerodromes`);
+    var json = await response.json();
+    AERODROMES = json;
     return json;
 };
 
 async function getMajorAerodromes() {
-    var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/aerodromes`);
+    var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/aerodromes/major`);
     var json = await response.json();
+    MAJOR_AERODROMES = json;
     return json;
 };
 
@@ -284,7 +294,7 @@ async function getATCSectors() {
                 console.log(e)
                 ctrs.push(e);
             }
-            if (e.properties.Callsign.includes("APP")) {
+            if (e.properties.Callsign.includes("APP")||e.properties.Callsign.includes("DEP")) {
                 console.log(e)
                 tmas.push(e);
             }
@@ -458,9 +468,9 @@ function formatAltString(string) {
     alt = alt / 100; // 33000 -> 330, 1000 -> 10, 340 -> 3.4
     // Altitudes less than 500ft are probably not legal anyway (lets assume no one on VATSIM has LL approval),
     //  more likely they entered their FPL alt in FL. Fix the dumb here. PS: Sorry CONC
-    if (alt <= 5) {
-        alt = alt * 100;
-    }
+    // if (alt <= 5) {
+    //     alt = alt * 100;
+    // }
     if (alt == 100) {
         return 'A100';
     } else {
@@ -523,7 +533,7 @@ async function setPilotMarkers() {
             }
         };
 
-        for (const marker of pilots.features) {
+        for (const marker of PILOTS.features) {
 
             // Create popup for each Marker
             if (marker.properties.pilot.flight_plan != undefined) {
@@ -618,7 +628,22 @@ async function setPilotMarkers() {
     }
 };
 
+// async function setAerodromeMarkers(){
+//     var activeAerodromes = [];
+//     try{
+//         PILOTS.features.forEach(function(e){
+//             if(AERODROMES.includes(e.properties.pilot.aerodrome)){
+
+//             }
+//         })
+//     }catch(err){console.log(err)}
+
+// };
+
+// Populate globals
 getPilots();
+getAerodromes();
+getMajorAerodromes();
 
 (async () => {
     var dataset = await getDataset();
@@ -633,6 +658,51 @@ map.on('load', function () {
         'type': 'geojson',
         'data': null
     });
+
+    // Aerodromes test
+    map.loadImage(
+        `${window.location.protocol}//${window.location.hostname}:${window.location.port}/static/flaticon.com/freepik/windsock.png`,
+        (error, image) => {
+        if (error) throw error;
+        map.addImage('aerodrome', image);
+        map.addSource('aerodromes', {
+            'type': 'geojson',
+            'data': AERODROMES
+        });
+         
+        // Add a symbol layer
+        // map.addLayer({
+        // 'id': 'points',
+        // 'type': 'symbol',
+        // 'source': 'points',
+        // 'layout': {
+        // 'icon-image': 'aerodrome',
+        // // get the title name from the source's "title" property
+        // 'text-field': ['get', 'properties', ['object', ['get', 'tags', ['object', ['get', 'icao']]]]],
+        // 'text-font': [
+        // 'Open Sans Semibold',
+        // 'Arial Unicode MS Bold'
+        // ],
+        // 'text-offset': [0, 1.25],
+        // 'text-anchor': 'top'
+        // }
+        // });
+
+        map.addLayer({
+            'id': 'aerodromes',
+            'type': 'line',
+            'source': 'aerodromes',
+            'layout': {},
+            'paint': {
+                'line-color': '#3b8df9',
+                'line-width': 2
+            }
+        });
+        
+        }
+        );
+        
+    // Aerodromes test
 
     map.jumpTo({
         center: [findGetParameter('lon') || 134.9, findGetParameter('lat') || -28.2],
@@ -649,6 +719,7 @@ map.on('load', function () {
                 getATCSectors();
                 getPilots();
                 setPilotMarkers();
+                // setAerodromeMarkers();
                 updatePilotsLayer();
             } else {
                 console.log('Reload inhibited')
