@@ -1,7 +1,7 @@
 {
     "app": {
         "name": "vatsim-map",
-        "version": "0.0.2",
+        "version": "0.0.3",
         "url": "https://github.com/vatpac-technology/vatsim-map/",
         "log_level": 30,
         "http": {
