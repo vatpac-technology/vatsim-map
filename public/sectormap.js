@@ -13,7 +13,7 @@ async function getDataset() {
 
     var dataset = await getDataset();
     console.log(dataset);
-    document.getElementById("mgl-map-overlay").innerHTML += `<p style="color: #3b8df9; font-weight: 800;"><strong>AIRAC Date ${dataset.Profile.Version._attributes.PublishDate}</strong> (${dataset.Profile.Version._attributes.AIRAC}${dataset.Profile.Version._attributes.Revision})</p>`;
+    document.getElementById("mgl-map-overlay").innerHTML += `<p style="color: #3b8df9; font-weight: 800;font-size:14px;">AIRAC ${dataset.Profile.Version._attributes.AIRAC}${dataset.Profile.Version._attributes.Revision}</p>`;
 })();
 function toggleBox() {
     showSide = !showSide
@@ -440,13 +440,8 @@ var map = new mapboxgl.Map({
     //center: [134.9, -28.2 ],
     //zoom: 15,
     maxZoom: 8,
-    attributionControl: false
-    // projection: {
-    //     name: "lambertConformalConic",
-    //     center: [130, -25],
-    //     parallels: [-12, -36.25]
-    // }
-    // projection name globe
+    attributionControl: false,
+    projection: 'globe'
 });
 // map.dragRotate.disable();
 // map.touchZoomRotate.disableRotation();
@@ -560,4 +555,14 @@ map.on('load', function () {
     getATCSectors();
 
 
+});
+
+map.on('style.load', () => {
+    map.setFog({
+        color: 'rgb(186, 210, 235)', // Lower atmosphere
+        'high-color': 'rgb(36, 92, 223)', // Upper atmosphere
+        'horizon-blend': 0.02, // Atmosphere thickness (default 0.2 at low zooms)
+        'space-color': 'rgb(11, 11, 25)', // Background color
+        'star-intensity': 0.35 // Background star brightness (default 0.35 at low zoooms )
+    });
 });

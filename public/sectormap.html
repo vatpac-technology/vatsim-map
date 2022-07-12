@@ -2,8 +2,8 @@
 
 <head>
     <!-- <title>VATSIM traffic</title> -->
-    <script src='https://api.mapbox.com/mapbox-gl-js/v2.6.0/mapbox-gl.js'></script>
-    <link href='https://api.mapbox.com/mapbox-gl-js/v2.6.0/mapbox-gl.css' rel='stylesheet' />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -96,7 +96,7 @@
     <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
     <!-- <script src="map-styles.js"></script> -->
-    <div id='mgl-map-overlay' style="border-radius: 1em; margin-bottom: 1em; margin-left: 1em; box-shadow: 1em;">
+    <div id='mgl-map-overlay' style="border-radius: 1em; margin-bottom: 1em; margin-left: 1em; box-shadow: 1em; width:200px;">
         <button class="btn" id="toggleButton" onclick="toggleBox()"><svg xmlns="http://www.w3.org/2000/svg" width="24"
                 height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left">
@@ -105,11 +105,9 @@
             </svg>
         </button>
         <div id="boxBody">
-            <img src="/static/vatpac-logo2.png" alt="VATPAC logo" width="50%" height="50%"
+            <img src="/static/vatpac-logo2.png" alt="VATPAC logo" width="25%" height="25%"
                 style="padding-top: 12px;"><br />
-            <h3><u
-                    style="text-decoration: underline; text-decoration-color: #3b8df9; text-decoration-thickness: 3px; text-transform: uppercase;">Aeronautical
-                    Chart</u></h3>Positions Diagram</br>
+            <p style="text-decoration: underline; text-decoration-color: #3b8df9; text-decoration-thickness: 1px; text-transform: uppercase; font-size:12px;">Aeronautical Positions Chart</p>
             <!--Dataset goes here. In sectormap.js-->
         </div>
     </div>
