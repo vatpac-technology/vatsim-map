@@ -443,6 +443,8 @@ var map = new mapboxgl.Map({
     attributionControl: false,
     projection: 'globe'
 });
+
+map.scrollZoom.disable();
 // map.dragRotate.disable();
 // map.touchZoomRotate.disableRotation();
 
@@ -509,6 +511,8 @@ map.addControl(
         placeholder: 'Find sector or frequency'
     })
 );
+
+map.addControl(new mapboxgl.NavigationControl());
 
 // Thanks to https://github.com/mapbox/mapbox-gl-js/issues/10093#issuecomment-726192651
 const graticule = {
