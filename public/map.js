@@ -659,3 +659,4 @@ map.on('load', function () {
     }, redrawTimeoutMs);
 });
 
+map.scrollZoom.disable();
