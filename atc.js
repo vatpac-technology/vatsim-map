@@ -1,17 +1,11 @@
 import { getLineFeatures, getXMLtoJS, getVatsimAFV } from './client.js';
-import { polygon, featureCollection } from '@turf/helpers';
+//import { polygon, featureCollection } from '@turf/helpers';
 import bunyan from 'bunyan';
 import config from 'config';
-import { 
-    lineToPolygon,
-    lineString,
-    booleanIntersects,
-    buffer,
-    featureEach,
-    union
-} from '@turf/turf';
+import * as turf from '@turf/turf';
 import { iso2dec } from './iso2dec.js';
 import rgb2hex from 'rgb2hex';
+import c from 'config';
 
 var log = bunyan.createLogger({name: config.get('app.name'), level: config.get('app.log_level')});
 
@@ -28,7 +22,7 @@ var log = bunyan.createLogger({name: config.get('app.name'), level: config.get('
 
 export async function getCoastline(){
     var coastline = await getLineFeatures(config.get("data.vatsys.coastlineUrl"));
-    return featureCollection(coastline);
+    return turf.featureCollection(coastline);
 }
 
 export async function getColours(){
@@ -61,14 +55,7 @@ export async function getATCSectors() {
 
     // Get sector details
     var sectorsXml = await getXMLtoJS(config.get("data.vatsys.sectorsUrl"));
-    // {
-    //     _attributes: {
-    //       FullName: 'Camden Surface Movement Control',
-    //       Frequency: '121.900',
-    //       Callsign: 'CN_GND',
-    //       Name: 'CN SMC'
-    //     }
-    //   }
+
     var sectors = [];
     sectorsXml.Sectors.Sector.forEach(function(s){
         var volumes = []
@@ -110,7 +97,7 @@ function getBoundary(boundaryName, volumesXml){
         var dec = iso2dec(line);
         this[index] = [dec.longitude, dec.latitude];
       }, lines);
-    return lineToPolygon(lineString(lines),{mutate: true, properties: boundary._attributes });
+    return turf.lineToPolygon(turf.lineString(lines),{mutate: true, properties: boundary._attributes });
 };
 
 function getVolume(volumeName, volumesXml){
@@ -162,6 +149,7 @@ function mergeSectors(sector, sectors, json){
     if(sector.volumes.length > 0){
         mergedSector = mergeBoundaries(sector);
     }
+
     if(sectors.length > 0){
         var sectorVolumes = [];
         // Union all sector volumes into a polygon
@@ -175,6 +163,7 @@ function mergeSectors(sector, sectors, json){
         var mergedPoly = unionArray(sectorVolumes);
         mergedSector = mergedPoly;
     }
+
     if(mergedSector != undefined){
         mergedSector.properties = {...sector};
         delete mergedSector.properties.responsibleSectors
@@ -183,45 +172,40 @@ function mergeSectors(sector, sectors, json){
     }
 }
 
-function mergeBoundaries(sector){
+function mergeBoundaries(sector) {
     var features = sector.volumes.map((volume) => volume.Boundaries.map((boundary) => boundary)).flat();
-    if(features.length > 1){
+    if (features.length > 1) {
         var union = unionArray(features);
         union.properties = { ...sector };
         delete union.properties.responsibleSectors;
         delete union.properties.volumes;
         return union;
-    }else if (features.length == 1){
+    } else if (features.length == 1) {
         features[0].properties = { ...sector };
         delete features[0].properties.responsibleSectors;
         delete features[0].properties.volumes;
         return features[0];
-    }else{
+    } else {
         return false;
     }
 }
 
 function unionArray(array){
-        const bufferKm = 0.1;
-        var fc = featureCollection(array);
-        if (fc.length === 0) {
-            return null
+    var featureCollection = turf.featureCollection(array);
+    if (featureCollection.length === 0) {
+        return null
+    }
+    let ret = featureCollection.features[0];
+
+    turf.featureEach(featureCollection, function (currentFeature, featureIndex) {
+        if (featureIndex > 0) {
+            ret = turf.union(ret, currentFeature);
         }
-        // buffer is a dirty dirty hack to close up some holes in datasets
-        let ret = buffer(fc.features[0],bufferKm, {units: 'kilometers'});
-        // let ret = featureCollection.features[0];
+    });
 
-        featureEach(fc, function (currentFeature, featureIndex) {
-            if (featureIndex > 0) {
-                ret = union(ret, buffer(currentFeature,bufferKm, {units: 'kilometers'}))
-                // ret = turf.union(ret, currentFeature);
-            }
-        });
-
-        // Remove any holes added in union
-        ret.geometry.coordinates.length = 1;
-
-        return ret;
+    // Remove any holes added in union
+    ret.geometry.coordinates.length = 1;
+    return ret;
 };
 
 function isAdjacentSector(sectorFrequency, primarySector, sectors){
@@ -258,37 +242,52 @@ export async function getOnlinePositions() {
     // SY_APP 124.400 AFV 124400000
     // iterate txvrs.element.transceivers.element frequency/1000000
     stations.forEach(function(station, index){
-        var activePosition = false;
         // Keep only CTR, APP, and TWR
         if(station.callsign.toUpperCase().includes("CTR") === false && station.callsign.toUpperCase().includes("APP") === false && station.callsign.toUpperCase().includes("TWR") === false){
             delete stations[index];
         }else{
-            var activeFrequncies = [];
-            // Transform frequencies array
-            station.transceivers.forEach(function(element){
-                // Hertz to Megahurts
-                element.frequency = element.frequency/1000000;
-                activeFrequncies.push(element.frequency);
-            })
-            activeFrequncies = uniq(activeFrequncies);
 
             // Join sectors by callsign
             var sector = sectors.find(function cb(element){
-                if(element.Callsign === station.callsign){
+                if(element.Callsign === station.callsign){        
+
                     // Check std sectors and load sub sectors.
-                    if(element.standard_position === true){
+                    if(element.standard_position === true && element.responsibleSectors.length > 0){
                         var sectorWithSubsectors = mergeSectors(element, element.responsibleSectors,sectors);
-                        return sectorWithSubsectors;
+
+                        onlineSectors.push(sectorWithSubsectors);
                     }else{
-                        return element;
+                        onlineSectors.push(mergeBoundaries(element));
                     }
+
+
+                    // check if other frequencies are active and show them as online.
+                    // this only works for ENR sectors.
+
+                    var activeFrequencies = [];
+                    station.transceivers.forEach(function(element){
+                        // Hertz to Megahurts
+                        element.frequency = element.frequency/1000000;
+                        activeFrequencies.push(element.frequency.toFixed(3));
+                    })
+
+                    activeFrequencies = uniq(activeFrequencies);
+
+                    activeFrequencies.forEach(function(frequency){
+                        sectors.find(function cb(element){
+
+                            if(element.Frequency === frequency && element.Callsign != station.callsign && element.Callsign.toUpperCase().includes("CTR")){
+                                var sectorWithSubsectors = mergeSectors(element, element.responsibleSectors,sectors);
+
+                                onlineSectors.push(sectorWithSubsectors);
+                            }
+
+                        })
+                    })
                 };
             });
-            if(sector !== undefined){
-                onlineSectors.push(mergeBoundaries(sector));
-                activePosition = mergeBoundaries(sector);
-            }
 
+            /*
             if(activePosition !== false){
                 // Join sectors by frequency
                 // TODO - How to incrementally add sectors working outwards from the logged on sector?
@@ -306,9 +305,10 @@ export async function getOnlinePositions() {
                     }
                 })
             }
+            */
         }
     })
 
 
-    return featureCollection(uniq(onlineSectors));
+    return turf.featureCollection(uniq(onlineSectors));
 }

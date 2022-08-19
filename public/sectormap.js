@@ -12,7 +12,7 @@ async function getDataset() {
 (async () => {
 
     var dataset = await getDataset();
-    console.log(dataset);
+    //console.log(dataset);
     document.getElementById("mgl-map-overlay").innerHTML += `<p style="color: #3b8df9; font-weight: 800;font-size:14px;">AIRAC ${dataset.Profile.Version._attributes.AIRAC}${dataset.Profile.Version._attributes.Revision}</p>`;
 })();
 function toggleBox() {
@@ -149,6 +149,7 @@ async function getATCSectors() {
         var stdSectors = [];
         sectorsJson.forEach(sector => {
             if (sector.standard_position === true) {
+                console.log(sectorsJson)
                 // Merge responsible sectors
                 var mergedSector = mergeSectors(sector, sector.responsibleSectors, sectorsJson)
                 stdSectors.push(mergedSector);
@@ -198,8 +199,8 @@ async function getATCSectors() {
         });
 
         SECTORS = turf.featureCollection(upperSectors.concat(tmaSectors, twrSectors));
-        console.log(`debug geojson`)
-        console.log(SECTORS);
+        //console.log(`debug geojson`)
+        //console.log(SECTORS);
 
         map.addSource('std', {
             'type': 'geojson',
