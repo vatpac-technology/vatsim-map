@@ -273,17 +273,22 @@ export async function getOnlinePositions() {
 
                     activeFrequencies = uniq(activeFrequencies);
 
-                    activeFrequencies.forEach(function(frequency){
-                        sectors.find(function cb(element){
+                    if(activeFrequencies.length > 1){
 
-                            if(element.Frequency === frequency && element.Callsign != station.callsign && element.Callsign.toUpperCase().includes("CTR")){
-                                var sectorWithSubsectors = mergeSectors(element, element.responsibleSectors,sectors);
+                        console.log(station.callsign)
 
-                                onlineSectors.push(sectorWithSubsectors);
-                            }
+                        activeFrequencies.forEach(function(frequency){
+                            sectors.find(function cb(element){
 
+                                if(element.Frequency === frequency && element.Callsign != station.callsign && element.Callsign.toUpperCase().includes("CTR")){
+                                    var sectorWithSubsectors = mergeSectors(element, element.responsibleSectors,sectors);
+
+                                    onlineSectors.push(sectorWithSubsectors);
+                                }
+
+                            })
                         })
-                    })
+                    }
                 };
             });
 
