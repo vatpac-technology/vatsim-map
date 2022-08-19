@@ -187,7 +187,7 @@ var map = new mapboxgl.Map({
     container: 'map', // container ID
     style: styleLight, // style URL
     center: [134.9, -28.2],
-    zoom: 3,
+    zoom: 4,
     attributionControl: false
 });
 map.dragRotate.disable();
@@ -262,12 +262,14 @@ if (findGetParameter('search') == 'false') {
             mapboxgl: mapboxgl,
             localGeocoder: forwardGeocoder,
             localGeocoderOnly: true,
-            zoom: 12,
             marker: false,
             placeholder: 'Find aircraft'
         })
     );
 }
+
+map.addControl(new mapboxgl.NavigationControl());
+
 
 async function getATCSectors() {
     try {
@@ -305,17 +307,7 @@ async function getATCSectors() {
             'type': 'geojson',
             'data': turf.featureCollection(twrs)
         });
-        // Add a new layer to visualize the polygon.
-        // map.addLayer({
-        // 'id': 'atcSectors',
-        // 'type': 'fill',
-        // 'source': 'atcCtrs', // reference the data source
-        // 'layout': {},
-        // 'paint': {
-        // 'fill-color': '#3b8df9', // blue color fill
-        // 'fill-opacity': 0.1
-        // }
-        // });
+
         // Add a black outline around the polygon.
         map.addLayer({
             'id': 'atcOutline',
@@ -332,7 +324,7 @@ async function getATCSectors() {
             'type': 'line',
             'source': 'atcTmas',
             'layout': {},
-            'minzoom': 5,
+            'minzoom': 3,
             'paint': {
                 'line-color': "#33cc99",
                 'line-width': 3,
@@ -344,7 +336,7 @@ async function getATCSectors() {
             'type': 'line',
             'source': 'atcTwrs',
             'layout': {},
-            'minzoom': 5,
+            'minzoom': 3,
             'paint': {
                 'line-color': "#3b8df9",
                 'line-width': 3,
@@ -490,7 +482,7 @@ function setPilotsLayer() {
             'id': 'aircraftLabels',
             'type': 'symbol',
             'source': 'aircraftMarkersSource',
-            'minzoom': 4,
+            'minzoom': 5,
             'layout': lightDetailedLayout,
             'paint': lightPaint
         });
@@ -506,7 +498,7 @@ function setPilotsLayer() {
             'id': 'aircraftLabels',
             'type': 'symbol',
             'source': 'aircraftMarkersSource',
-            'minzoom': 4,
+            'minzoom': 5,
             'layout': darkDetailedLayout,
             'paint': darkPaint
         });
@@ -634,10 +626,12 @@ map.on('load', function () {
         'data': null
     });
 
+    /*
     map.jumpTo({
         center: [findGetParameter('lon') || 134.9, findGetParameter('lat') || -28.2],
-        zoom: findGetParameter('zoom') || 3,
+        zoom: findGetParameter('zoom') || 5,
     })
+    */
 
     setPilotsLayer();
     setPilotMarkers();

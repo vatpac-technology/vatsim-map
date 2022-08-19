@@ -275,8 +275,6 @@ export async function getOnlinePositions() {
 
                     if(activeFrequencies.length > 1){
 
-                        console.log(station.callsign)
-
                         activeFrequencies.forEach(function(frequency){
                             sectors.find(function cb(element){
 
