@@ -271,7 +271,7 @@ if (findGetParameter('search') == 'false') {
 var mobile = findGetParameter('mobile') || false;
 if (mobile) {
     map.scrollZoom.disable();
-    map.addControl(new mapboxgl.NavigationControl());
+    //map.addControl(new mapboxgl.NavigationControl());
 }
 
 

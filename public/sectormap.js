@@ -528,7 +528,7 @@ map.addControl(
 var mobile = findGetParameter('mobile') || false;
 if (mobile) {
     map.scrollZoom.disable();
-    map.addControl(new mapboxgl.NavigationControl());
+    //map.addControl(new mapboxgl.NavigationControl());
 }
 
 // Thanks to https://github.com/mapbox/mapbox-gl-js/issues/10093#issuecomment-726192651
