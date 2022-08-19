@@ -332,7 +332,7 @@ async function getATCSectors() {
             'paint': {
                 'line-color': "#33cc99",
                 'line-width': 3,
-                'line-dasharray': [5, 5]
+                'line-dasharray': [1, 1]
             }
         });
         map.addLayer({
@@ -342,7 +342,7 @@ async function getATCSectors() {
             'layout': {},
             'minzoom': 3,
             'paint': {
-                'line-color': "#3b8df9",
+                'line-color': "#5D3FD3",
                 'line-width': 3,
                 'line-dasharray': [1, 1]
             }
