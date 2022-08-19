@@ -268,7 +268,11 @@ if (findGetParameter('search') == 'false') {
     );
 }
 
-map.addControl(new mapboxgl.NavigationControl());
+var mobile = findGetParameter('mobile') || false;
+if (mobile) {
+    map.scrollZoom.disable();
+    map.addControl(new mapboxgl.NavigationControl());
+}
 
 
 async function getATCSectors() {
@@ -626,12 +630,11 @@ map.on('load', function () {
         'data': null
     });
 
-    /*
+    
     map.jumpTo({
         center: [findGetParameter('lon') || 134.9, findGetParameter('lat') || -28.2],
-        zoom: findGetParameter('zoom') || 5,
+        zoom: findGetParameter('zoom') || 4,
     })
-    */
 
     setPilotsLayer();
     setPilotMarkers();
@@ -653,4 +656,3 @@ map.on('load', function () {
     }, redrawTimeoutMs);
 });
 
-map.scrollZoom.disable();

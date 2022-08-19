@@ -3,6 +3,19 @@
 //Hide Side Text 
 showSide = true;
 
+function findGetParameter(parameterName) {
+    var result = false,
+        tmp = [];
+    location.search
+        .substr(1)
+        .split("&")
+        .forEach(function (item) {
+            tmp = item.split("=");
+            if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
+        });
+    return result;
+};
+
 async function getDataset() {
     var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/dataset`);
     var json = await response.json();
@@ -445,7 +458,6 @@ var map = new mapboxgl.Map({
     projection: 'globe'
 });
 
-map.scrollZoom.disable();
 // map.dragRotate.disable();
 // map.touchZoomRotate.disableRotation();
 
@@ -513,7 +525,11 @@ map.addControl(
     })
 );
 
-map.addControl(new mapboxgl.NavigationControl());
+var mobile = findGetParameter('mobile') || false;
+if (mobile) {
+    map.scrollZoom.disable();
+    map.addControl(new mapboxgl.NavigationControl());
+}
 
 // Thanks to https://github.com/mapbox/mapbox-gl-js/issues/10093#issuecomment-726192651
 const graticule = {
