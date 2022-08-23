@@ -278,10 +278,17 @@ export async function getOnlinePositions() {
                         activeFrequencies.forEach(function(frequency){
                             sectors.find(function cb(element){
 
-                                if(element.Frequency === frequency && element.Callsign != station.callsign && element.Callsign.toUpperCase().includes("CTR")){
-                                    var sectorWithSubsectors = mergeSectors(element, element.responsibleSectors,sectors);
+                                if(element.Frequency === frequency && element.Callsign != station.callsign){
+                                    var subSectorWithSubsectors = mergeSectors(element, element.responsibleSectors,sectors);
 
-                                    onlineSectors.push(sectorWithSubsectors);
+                                    var poly1 = turf.polygon(sectorWithSubsectors.geometry.coordinates)
+                                    var poly2 = turf.polygon(subSectorWithSubsectors.geometry.coordinates)
+                                    
+                                    var intersection = turf.booleanOverlap(poly1, poly2)
+
+                                    if(intersection){
+                                        onlineSectors.push(subSectorWithSubsectors);
+                                    }
                                 }
 
                             })
