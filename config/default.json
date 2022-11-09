@@ -22,7 +22,6 @@
         "sectors": {
             "standard": [
                 "BN-TRT_CTR",
-                "ML-YWE_CTR",
                 "BN-KEN_CTR",
                 "BN-ISA_CTR",
                 "BN-INL_CTR",
@@ -36,6 +35,7 @@
                 "ML-HUO_CTR",
                 "BN-TSN_FSS",
                 "ML-IND_FSS",
+                "ML-YWE_CTR",
                 "NFFF_FSS",
                 "NWWW_CTR",
                 "AYPM_CTR",

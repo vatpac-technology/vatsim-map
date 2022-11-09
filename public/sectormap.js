@@ -451,9 +451,9 @@ var map = new mapboxgl.Map({
     container: 'map', // container ID
     // style: 'mapbox://styles/cycloptivity/cksqo94ovrrk517lyn947vqw2',
     style: 'mapbox://styles/cycloptivity/ckrai7rg601cw18p5zu4ntq27',
-    //center: [134.9, -28.2 ],
-    //zoom: 15,
-    maxZoom: 8,
+    center: [134.9, -28.2 ],
+    zoom: 3.8,
+    //maxZoom: 8,
     attributionControl: false,
     projection: 'globe'
 });
@@ -519,7 +519,7 @@ map.addControl(
         mapboxgl: mapboxgl,
         localGeocoder: forwardGeocoder,
         localGeocoderOnly: true,
-        zoom: 6,
+        //zoom: 6,
         marker: true,
         placeholder: 'Find sector or frequency'
     })
