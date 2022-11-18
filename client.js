@@ -183,8 +183,9 @@ export async function queryOverpass (query) {
 
 export async function getVatsimData () {
     const vatsimServers = await getVatsimServers();
-    var getUrl = uniqueRandomArray(vatsimServers.data.v3);
-    var url = getUrl();
+    /*var getUrl = uniqueRandomArray(vatsimServers.data.v3);
+    var url = getUrl();*/
+    var url = config.get('data.vatsim.dataUrl');
     log.debug(`VATSIM data URL: ${url}`);
     var ttlMs = cache.getTtl('getVatsimData');
     let data;
@@ -256,8 +257,9 @@ export async function getVatsimData () {
 
 export async function getVatsimAFV () {
     const vatsimServers = await getVatsimServers();
-    var getUrl = uniqueRandomArray(vatsimServers.data.transceivers);
-    var url = getUrl();
+    /*var getUrl = uniqueRandomArray(vatsimServers.data.transceivers);
+    var url = getUrl();*/
+    var url = config.get('data.vatsim.transceiversUrl');
     log.debug(`VATSIM data URL: ${url}`);
     var ttlMs = cache.getTtl('getVatsimAFV');
     let data;

@@ -73,7 +73,9 @@
     },
     "data": {
         "vatsim": {
-            "statusUrl": "https://status.vatsim.net/status.json"
+            "statusUrl": "https://status.vatsim.net/status.json",
+            "transceiversUrl": "https://data.vatsim.net/v3/transceivers-data.json",
+            "dataUrl": "https://data.vatsim.net/v3/vatsim-data.json"
         },
         "vatsys": {
             "fir_boundariesUrl": "https://raw.githubusercontent.com/vatSys/australia-dataset/master/Maps/FIR_BOUNDARIES.xml",
