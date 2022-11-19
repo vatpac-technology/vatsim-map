@@ -186,9 +186,10 @@ const styleDark = 'mapbox://styles/cycloptivity/ckrsmmn0623yb17pew9y59lao';
 var map = new mapboxgl.Map({
     container: 'map', // container ID
     style: styleLight, // style URL
-    center: [134.9, -28.2],
-    zoom: 4,
-    attributionControl: false
+    center: [134.9, -28.2 ],
+    zoom: 3.8,
+    attributionControl: false,
+    projection: 'globe'
 });
 map.dragRotate.disable();
 map.touchZoomRotate.disableRotation();
@@ -336,6 +337,17 @@ async function getATCSectors() {
             }
         });
         map.addLayer({
+            'id': 'tmaFill',
+            'type': 'fill',
+            'source': 'atcTmas',
+            'layout': {},
+            'minzoom': 3,
+            'paint': {
+                'fill-color': '#33cc99',
+                'fill-opacity': 0.2
+            }
+        });
+        map.addLayer({
             'id': 'twrLine',
             'type': 'line',
             'source': 'atcTwrs',
@@ -345,6 +357,17 @@ async function getATCSectors() {
                 'line-color': "#5D3FD3",
                 'line-width': 3,
                 'line-dasharray': [1, 1]
+            }
+        });
+        map.addLayer({
+            'id': 'twrFill',
+            'type': 'fill',
+            'source': 'atcTwrs',
+            'layout': {},
+            'minzoom': 3,
+            'paint': {
+                'fill-color': '#5D3FD3',
+                'fill-opacity': 0.2
             }
         });
         // // Add sector labels
