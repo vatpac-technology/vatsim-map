@@ -689,3 +689,10 @@ map.on('style.load', () => {
     });
 });
 
+var mobile = findGetParameter('nav-control') || false;
+
+if (mobile) {
+    //map.scrollZoom.disable();
+    map.addControl(new mapboxgl.NavigationControl());
+}
+
