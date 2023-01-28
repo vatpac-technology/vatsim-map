@@ -63,6 +63,18 @@ app.get('/v1/flights/callsign/:callsign', cors(), async (req, res) => {
   }
 });
 
+app.get('/v1/flights/cid/:cid', cors(), async (req, res) => {
+  const pilots = await getPilots();
+  const feature = pilots.features.find(e => e.properties.pilot.cid === req.params.cid)
+  if(feature == false){
+    res.sendStatus(500);
+  } else if(feature == undefined){
+    res.sendStatus(404);
+  }else{
+    res.send(feature.properties.pilot)
+  }
+});
+
 app.get('/v1/flights/arrivals/:icaoCode', cors(), async (req, res) => {
   const pilotData = await getPilots();
   var features = false;
@@ -184,7 +196,7 @@ app.get('/v1/cache/stats', cors(), (req, res) => {
 });
 
 app.listen(PORT, HOST);
-console.log(`Running on http://${HOST}:${PORT}`);
+//console.log(`Running on http://${HOST}:${PORT}`);
 
 // Fill OSM cache
 getAerodromes();

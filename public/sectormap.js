@@ -72,7 +72,7 @@ function getSectorByName(sectorName, json) {
         };
     });
     if (sector === undefined) {
-        console.log(`Loading sector ${sectorName} failed`);
+        //console.log(`Loading sector ${sectorName} failed`);
     }
     return sector;
 }
@@ -162,7 +162,7 @@ async function getATCSectors() {
         var stdSectors = [];
         sectorsJson.forEach(sector => {
             if (sector.standard_position === true) {
-                console.log(sectorsJson)
+                //console.log(sectorsJson)
                 // Merge responsible sectors
                 var mergedSector = mergeSectors(sector, sector.responsibleSectors, sectorsJson)
                 stdSectors.push(mergedSector);
@@ -438,7 +438,7 @@ async function getATCSectors() {
 
     } catch (err) {
         // throw Error(err);
-        console.log(err);
+        //console.log(err);
     }
 };
 // Map BG ASDBackground

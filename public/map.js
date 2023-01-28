@@ -286,13 +286,13 @@ async function getATCSectors() {
 
         // Split CTR, TMA, and TWRs
         json.features.forEach(function (e) {
-            console.log(e.properties.Callsign)
+            //console.log(e.properties.Callsign)
             if (e.properties.Callsign.includes("CTR")) {
-                console.log(e)
+                //console.log(e)
                 ctrs.push(e);
             }
             if (e.properties.Callsign.includes("APP")) {
-                console.log(e)
+                //console.log(e)
                 tmas.push(e);
             }
             if (e.properties.Callsign.includes("TWR")) {
@@ -373,10 +373,10 @@ async function getATCSectors() {
         // // Add sector labels
         var atcLabelPoints = [];
         json.features.forEach(function (e) {
-            // console.log(e)
+            // //console.log(e)
             atcLabelPoints.push(turf.centroid(e));
         });
-        console.log(atcLabelPoints);
+        //console.log(atcLabelPoints);
         map.addSource('atcLabelPoints', {
             'type': 'geojson',
             'data': json
@@ -441,7 +441,7 @@ function formatCodeString(string, length) {
         resString.replace(/\n+$/, "");
         return resString;
     } catch (err) {
-        console.log(err)
+        //console.log(err)
     };
 }
 
@@ -464,7 +464,7 @@ function formatTypeString(string) {
             // Something failed to parse - throw it back in the aircraft string
             return [string, "NIL", "NIL"];
         } else {
-            console.log(`Failed parsing formatTypeString` + err)
+            //console.log(`Failed parsing formatTypeString` + err)
         }
     }
 }
@@ -492,7 +492,7 @@ async function updatePilotsLayer() {
     try {
         map.getSource('aircraftMarkersSource').setData(pilots);
     } catch (err) {
-        console.log(err);
+        //console.log(err);
     }
 }
 
@@ -633,7 +633,7 @@ async function setPilotMarkers() {
             });
         }
     } catch (err) {
-        console.log(err)
+        //console.log(err)
     }
 };
 
@@ -641,7 +641,7 @@ getPilots();
 
 (async () => {
     var dataset = await getDataset();
-    console.log(dataset);
+    //console.(dataset);
     map.addControl(new mapboxgl.AttributionControl({
         customAttribution: `vatSys ${dataset.Profile._attributes.Name} dataset <strong>AIRAC ${dataset.Profile.Version._attributes.AIRAC}${dataset.Profile.Version._attributes.Revision}</strong> | <a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>`
     }))
@@ -671,7 +671,7 @@ map.on('load', function () {
                 setPilotMarkers();
                 updatePilotsLayer();
             } else {
-                console.log('Reload inhibited')
+                //console.log('Reload inhibited')
             }
             setTimeout(resolve(), redrawTimeoutMs);
         });
