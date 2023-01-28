@@ -414,6 +414,7 @@ async function getATCSectors() {
         };
     } catch (err) {
         // throw Error(err);
+        console.log(err);
     }
 };
 
@@ -441,7 +442,7 @@ function formatCodeString(string, length) {
         resString.replace(/\n+$/, "");
         return resString;
     } catch (err) {
-        //console.log(err)
+        console.log(err)
     };
 }
 
@@ -492,7 +493,7 @@ async function updatePilotsLayer() {
     try {
         map.getSource('aircraftMarkersSource').setData(pilots);
     } catch (err) {
-        //console.log(err);
+        console.log(err);
     }
 }
 
@@ -633,7 +634,7 @@ async function setPilotMarkers() {
             });
         }
     } catch (err) {
-        //console.log(err)
+        console.log(err)
     }
 };
 
