@@ -177,7 +177,7 @@ const clearAsyncInterval = (intervalIndex) => {
 mapboxgl.accessToken = 'pk.eyJ1IjoiY3ljbG9wdGl2aXR5IiwiYSI6ImNqcDY0NnZnYzBmYjYzd284dzZudmdvZmUifQ.RyR4jd1HRggrbeZRvkv0xg';
 var markers = [];
 var reload = true;
-var redrawTimeoutMs = 5000;
+var redrawTimeoutMs = 15000;
 var pilots = false;
 
 const styleLight = 'mapbox://styles/cycloptivity/ckrai7rg601cw18p5zu4ntq27';
