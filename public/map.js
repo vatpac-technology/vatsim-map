@@ -300,76 +300,103 @@ async function getATCSectors() {
             }
         });
 
-        map.addSource('atcCtrs', {
-            'type': 'geojson',
-            'data': turf.featureCollection(ctrs)
-        });
-        map.addSource('atcTmas', {
-            'type': 'geojson',
-            'data': turf.featureCollection(tmas)
-        });
-        map.addSource('atcTwrs', {
-            'type': 'geojson',
-            'data': turf.featureCollection(twrs)
-        });
+        if(!map.getSource('atcCtrs')) {
+            map.addSource('atcCtrs', {
+                'type': 'geojson',
+                'data': turf.featureCollection(ctrs)
+            });
+        }
+        else{
+            map.getSource('atcCtrs').setData(turf.featureCollection(ctrs));
+        }
+
+        if(!map.getSource('atcTmas')) {
+            map.addSource('atcTmas', {
+                'type': 'geojson',
+                'data': turf.featureCollection(tmas)
+            });
+        }
+        else{
+            map.getSource('atcTmas').setData(turf.featureCollection(tmas));
+        }
+
+        if(!map.getSource('atcTwrs')) {
+            map.addSource('atcTwrs', {
+                'type': 'geojson',
+                'data': turf.featureCollection(twrs)
+            });
+        }
+        else{
+            map.getSource('atcTwrs').setData(turf.featureCollection(twrs));
+        }
 
         // Add a black outline around the polygon.
-        map.addLayer({
-            'id': 'atcOutline',
-            'type': 'line',
-            'source': 'atcCtrs',
-            'layout': {},
-            'paint': {
-                'line-color': '#3b8df9',
-                'line-width': 2
-            }
-        });
-        map.addLayer({
-            'id': 'tmaLine',
-            'type': 'line',
-            'source': 'atcTmas',
-            'layout': {},
-            'minzoom': 3,
-            'paint': {
-                'line-color': "#33cc99",
-                'line-width': 3,
-                'line-dasharray': [1, 1]
-            }
-        });
-        map.addLayer({
-            'id': 'tmaFill',
-            'type': 'fill',
-            'source': 'atcTmas',
-            'layout': {},
-            'minzoom': 3,
-            'paint': {
-                'fill-color': '#33cc99',
-                'fill-opacity': 0.2
-            }
-        });
-        map.addLayer({
-            'id': 'twrLine',
-            'type': 'line',
-            'source': 'atcTwrs',
-            'layout': {},
-            'minzoom': 3,
-            'paint': {
-                'line-color': "#5D3FD3",
-                'line-width': 3,
-                'line-dasharray': [1, 1]
-            }
-        });
-        map.addLayer({
-            'id': 'twrFill',
-            'type': 'fill',
-            'source': 'atcTwrs',
-            'layout': {},
-            'minzoom': 3,
-            'paint': {
-                'fill-color': '#5D3FD3',
-                'fill-opacity': 0.2
-            }
-        });
+        if (!this.map.getLayer('atcOutline')) {
+            map.addLayer({
+                'id': 'atcOutline',
+                'type': 'line',
+                'source': 'atcCtrs',
+                'layout': {},
+                'paint': {
+                    'line-color': '#3b8df9',
+                    'line-width': 2
+                }
+            });
+        }
+        if (!this.map.getLayer('tmaLine')) {
+            map.addLayer({
+                'id': 'tmaLine',
+                'type': 'line',
+                'source': 'atcTmas',
+                'layout': {},
+                'minzoom': 3,
+                'paint': {
+                    'line-color': "#33cc99",
+                    'line-width': 3,
+                    'line-dasharray': [1, 1]
+                }
+            });
+        }
+        if (!this.map.getLayer('tmaFill')) {
+            map.addLayer({
+                'id': 'tmaFill',
+                'type': 'fill',
+                'source': 'atcTmas',
+                'layout': {},
+                'minzoom': 3,
+                'paint': {
+                    'fill-color': '#33cc99',
+                    'fill-opacity': 0.2
+                }
+            });
+        }
+        if (!this.map.getLayer('twrLine')) {
+            map.addLayer({
+                'id': 'twrLine',
+                'type': 'line',
+                'source': 'atcTwrs',
+                'layout': {},
+                'minzoom': 3,
+                'paint': {
+                    'line-color': "#5D3FD3",
+                    'line-width': 3,
+                    'line-dasharray': [1, 1]
+                }
+            });
+        }
+        if (!this.map.getLayer('twrFill')) {
+            map.addLayer({
+                'id': 'twrFill',
+                'type': 'fill',
+                'source': 'atcTwrs',
+                'layout': {},
+                'minzoom': 3,
+                'paint': {
+                    'fill-color': '#5D3FD3',
+                    'fill-opacity': 0.2
+                }
+            });
+        }
         // // Add sector labels
         var atcLabelPoints = [];
         json.features.forEach(function (e) {
@@ -377,10 +404,17 @@ async function getATCSectors() {
             atcLabelPoints.push(turf.centroid(e));
         });
         //console.log(atcLabelPoints);
-        map.addSource('atcLabelPoints', {
-            'type': 'geojson',
-            'data': json
-        });
+
+        if(!map.getSource('atcLabelPoints')) {
+            map.addSource('atcLabelPoints', {
+                'type': 'geojson',
+                'data': json
+            });
+        }
+        else{
+            map.getSource('atcLabelPoints').setData(json);
+        }
+
         if (theme == "dark") {
             var mapLayer = map.getLayer('atcPoints');
 
@@ -388,14 +422,18 @@ async function getATCSectors() {
                 // Remove map layer & source.
                 map.removeLayer('atcPoints');
             }
-            map.addLayer({
-                'id': 'atcPoints',
-                'type': 'symbol',
-                'source': 'atcLabelPoints',
-                'minzoom': 5,
-                'layout': atcLightDetailedLayout,
-                'paint': lightPaint
-            });
+            
+            if (!this.map.getLayer('twrFill')) {
+                map.addLayer({
+                    'id': 'twrFill',
+                    'type': 'symbol',
+                    'source': 'atcLabelPoints',
+                    'minzoom': 5,
+                    'layout': atcLightDetailedLayout,
+                    'paint': lightPaint
+                });
+            }
+
         } else {
             var mapLayer = map.getLayer('atcPoints');
 
@@ -403,14 +441,16 @@ async function getATCSectors() {
                 // Remove map layer & source.
                 map.removeLayer('atcPoints');
             }
-            map.addLayer({
-                'id': 'atcPoints',
-                'type': 'symbol',
-                'source': 'atcLabelPoints',
-                'minzoom': 5,
-                'layout': atcDarkDetailedLayout,
-                'paint': darkPaint
-            });
+            if (!this.map.getLayer('atcPoints')) {
+                map.addLayer({
+                    'id': 'atcPoints',
+                    'type': 'symbol',
+                    'source': 'atcLabelPoints',
+                    'minzoom': 5,
+                    'layout': atcDarkDetailedLayout,
+                    'paint': darkPaint
+                });
+            }
         };
     } catch (err) {
         // throw Error(err);
@@ -534,6 +574,7 @@ function setPilotsLayer() {
 }
 
 async function setPilotMarkers() {
+
     let popup;
     try {
         // Redraw markers if already set
@@ -661,15 +702,14 @@ map.on('load', function () {
     })
 
     setPilotsLayer();
-    setPilotMarkers();
+    //setPilotMarkers();
 
     // Main loop
     setAsyncInterval(async () => {
         const promise = new Promise((resolve) => {
             if (reload) {
                 getATCSectors();
-                getPilots();
-                setPilotMarkers();
+                setPilotMarkers(getPilots());
                 updatePilotsLayer();
             } else {
                 //console.log('Reload inhibited')
