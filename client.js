@@ -190,7 +190,7 @@ export async function getVatsimData () {
     var ttlMs = cache.getTtl('getVatsimData');
     let data;
     // VATSIM data is refreshed every 15s. Check 10s out from expiry.
-    if (ttlMs == undefined || ttlMs - Date.now() <= 10000) {
+    if (ttlMs == undefined || ttlMs < Date.now()) {
         try{
             // Download fresh VATSIM data
             if(ttlMs == undefined){
@@ -260,7 +260,7 @@ export async function getVatsimAFV () {
     /*var getUrl = uniqueRandomArray(vatsimServers.data.transceivers);
     var url = getUrl();*/
     var url = config.get('data.vatsim.transceiversUrl');
-    log.debug(`VATSIM data URL: ${url}`);
+    //log.debug(`VATSIM data URL: ${url}`);
     var ttlMs = cache.getTtl('getVatsimAFV');
     let data;
     // VATSIM data is refreshed every 15s. Check 10s out from expiry.

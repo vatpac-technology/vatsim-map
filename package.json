@@ -17,7 +17,7 @@
     "express": "^4.17.1",
     "node-cache": "^5.1.2",
     "node-fetch": "^2.6.1",
-    "query-overpass": "https://github.com/Kahn/query-overpass.git",
+    "query-overpass": "file:../dependencies/query-overpass-master",
     "rgb2hex": "^0.2.5",
     "sha1": "^1.1.1",
     "unique-random-array": "^3.0.0",
@@ -38,14 +38,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Kahn/vatsim-map.git"
+    "url": "git+https://github.com/vatpac-technology/vatsim-map.git"
   },
   "author": "Sam Wilson",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/Kahn/vatsim-map/issues"
+    "url": "https://github.com/vatpac-technology/vatsim-map/issues"
   },
-  "homepage": "https://github.com/Kahn/vatsim-map#readme",
+  "homepage": "https://github.com/vatpac-technology/vatsim-map#readme",
   "jest": {
     "transform": {}
   }

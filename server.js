@@ -19,11 +19,18 @@ var corsOptions = {
 
 app.get('/', cors(), async (req, res) => {
     res.send(`
+    <html>
+    <head>
+    <title>VATPAC Map Service</title>
+    </head>
+    <body>
     <ul>
     <li><a href="/static/sectormap.html">ATC sector map</a></li>
     <li><a href="/static/map.html?theme=light">Pilots map - light theme</a></li>
     <li><a href="/static/map.html?theme=dark">Pilots map - dark theme</a></li>
     </ul>
+    </body>
+    </html>
     ${config.get('app.name')} / ${config.get('app.version')} ${process.env.NODE_ENV || "dev"}
     `);
 });

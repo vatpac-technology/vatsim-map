@@ -242,87 +242,84 @@ export async function getOnlinePositions() {
 
     // SY_APP 124.400 AFV 124400000
     // iterate txvrs.element.transceivers.element frequency/1000000
-    if(stations){
-        stations.forEach(function(station, index){
-            // Keep only CTR, APP, and TWR.
-            if(station.callsign.toUpperCase().includes("CTR") === false && station.callsign.toUpperCase().includes("APP") === false && station.callsign.toUpperCase().includes("TWR") === false){
-                delete stations[index];
-            }else{
+    stations.forEach(function(station, index){
+        // Keep only CTR, APP, and TWR.
+        if(station.callsign.toUpperCase().includes("CTR") === false && station.callsign.toUpperCase().includes("APP") === false && station.callsign.toUpperCase().includes("TWR") === false){
+            delete stations[index];
+        }else{
 
-                // Join sectors by callsign
-                var sector = sectors.find(function cb(element){
-                    if(element.Callsign === station.callsign){        
+            // Join sectors by callsign
+            var sector = sectors.find(function cb(element){
+                if(element.Callsign === station.callsign){        
 
-                        // Check std sectors and load sub sectors.
-                        if(element.standard_position === true && element.responsibleSectors.length > 0){
-                            sectorWithSubsectors = mergeSectors(element, element.responsibleSectors,sectors);
+                    // Check std sectors and load sub sectors.
+                    if(element.standard_position === true && element.responsibleSectors.length > 0){
+                        sectorWithSubsectors = mergeSectors(element, element.responsibleSectors,sectors);
 
+                        onlineSectors.push(sectorWithSubsectors);
+                    }else{
+                        onlineSectors.push(mergeBoundaries(element));
+                    }
+
+                    // check if other frequencies are active and show them as online.
+                    // this only works for ENR sectors.
+
+                    var activeFrequencies = [];
+                    station.transceivers.forEach(function(element){
+                        // Hertz to Megahurts
+                        element.frequency = element.frequency/1000000;
+                        activeFrequencies.push(element.frequency.toFixed(3));
+                    })
+
+                    if(activeFrequencies.length > 1){
+
+                        activeFrequencies.forEach(function(frequency){
+                            sectors.find(function cb(element){     
+                                
+                                activeFrequencies = uniq(activeFrequencies);
+                                var type = station.callsign.toUpperCase().includes("CTR");
+
+                                if(element.Frequency == frequency && element.Callsign != station.callsign && type){
+
+                                    var subSectorWithSubsectors = mergeSectors(element, element.responsibleSectors,sectors);
+
+                                    var poly1 = turf.polygon(sectorWithSubsectors.geometry.coordinates)
+                                    var poly2 = turf.polygon(subSectorWithSubsectors.geometry.coordinates)
+                                    
+                                    var intersection = turf.booleanOverlap(poly1, poly2)
+
+                                    if(intersection){
+                                        onlineSectors.push(subSectorWithSubsectors);
+                                    }
+                                }
+
+                            })
+                        })
+                    }
+                };
+            });
+
+            /*
+            if(activePosition !== false){
+                // Join sectors by frequency
+                // TODO - How to incrementally add sectors working outwards from the logged on sector?
+                var extendedPoly = activePosition;
+                activeFrequncies.forEach(function(element){
+                    var adjacentSector = isAdjacentSector(element, extendedPoly, sectors);
+                    if(adjacentSector !== false){
+                        extendedPoly = unionArray([extendedPoly, sectorWithSubsectors])
+                        if(adjacentSector.standard_position === true){
+                            var sectorWithSubsectors = mergeSectors(adjacentSector, adjacentSector.responsibleSectors,sectors);
                             onlineSectors.push(sectorWithSubsectors);
                         }else{
-                            onlineSectors.push(mergeBoundaries(element));
+                            onlineSectors.push(mergeBoundaries(adjacentSector));
                         }
-
-                        // check if other frequencies are active and show them as online.
-                        // this only works for ENR sectors.
-
-                        var activeFrequencies = [];
-                        station.transceivers.forEach(function(element){
-                            // Hertz to Megahurts
-                            element.frequency = element.frequency/1000000;
-                            activeFrequencies.push(element.frequency.toFixed(3));
-                        })
-
-                        activeFrequencies = uniq(activeFrequencies);
-                        var type = station.callsign.toUpperCase().includes("CTR");
-
-                        if(activeFrequencies.length > 1 && type){
-
-                            activeFrequencies.forEach(function(frequency){
-                                sectors.find(function cb(element){                                 
-
-                                    if(element.Frequency == frequency && element.Callsign != station.callsign){
-
-                                        var subSectorWithSubsectors = mergeSectors(element, element.responsibleSectors,sectors);
-
-                                        var poly1 = turf.polygon(sectorWithSubsectors.geometry.coordinates)
-                                        var poly2 = turf.polygon(subSectorWithSubsectors.geometry.coordinates)
-                                        
-                                        var intersection = turf.booleanOverlap(poly1, poly2)
-
-                                        if(intersection){
-                                            onlineSectors.push(subSectorWithSubsectors);
-                                        }
-                                    }
-
-                                })
-                            })
-                        }
-                    };
-                });
-
-                /*
-                if(activePosition !== false){
-                    // Join sectors by frequency
-                    // TODO - How to incrementally add sectors working outwards from the logged on sector?
-                    var extendedPoly = activePosition;
-                    activeFrequncies.forEach(function(element){
-                        var adjacentSector = isAdjacentSector(element, extendedPoly, sectors);
-                        if(adjacentSector !== false){
-                            extendedPoly = unionArray([extendedPoly, sectorWithSubsectors])
-                            if(adjacentSector.standard_position === true){
-                                var sectorWithSubsectors = mergeSectors(adjacentSector, adjacentSector.responsibleSectors,sectors);
-                                onlineSectors.push(sectorWithSubsectors);
-                            }else{
-                                onlineSectors.push(mergeBoundaries(adjacentSector));
-                            }
-                        }
-                    })
-                }
-                */
+                    }
+                })
             }
-        })
-    }
-
+            */
+        }
+    })
 
     return turf.featureCollection(uniq(onlineSectors));
 }

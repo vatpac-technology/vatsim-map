@@ -25,10 +25,6 @@ export async function getPilots(){
 
 function pilotsInFIR(firs, aerodromes, data){
     var pilotsInFIR = [];
-    if(!data.pilots){
-        console.log('no data.pilots')
-        return false;
-    }
 
     data.pilots.forEach(function(pilot) {
         var ppos = point(
