@@ -53,7 +53,7 @@ app.get('/v1/pilots', cors(), async (req, res) => {
 
 app.get('/v1/flights/callsign/:callsign', cors(), async (req, res) => {
   const pilots = await getPilots();
-  const feature = pilots.features.find(e => e.properties.pilot.callsign === req.params.callsign)
+  const feature = pilots.features.find(e => e.properties.pilot.callsign == req.params.callsign)
   if(feature == false){
     res.sendStatus(500);
   } else if(feature == undefined){
@@ -65,7 +65,7 @@ app.get('/v1/flights/callsign/:callsign', cors(), async (req, res) => {
 
 app.get('/v1/flights/cid/:cid', cors(), async (req, res) => {
   const pilots = await getPilots();
-  const feature = pilots.features.find(e => e.properties.pilot.cid === req.params.cid)
+  const feature = pilots.features.find(e => e.properties.pilot.cid == req.params.cid)
   if(feature == false){
     res.sendStatus(500);
   } else if(feature == undefined){
@@ -80,7 +80,7 @@ app.get('/v1/flights/arrivals/:icaoCode', cors(), async (req, res) => {
   var features = false;
   var pilots = [];
   try{
-    features = pilotData.features.filter(e => e.properties.pilot.flight_plan.arrival === req.params.icaoCode)
+    features = pilotData.features.filter(e => e.properties.pilot.flight_plan.arrival == req.params.icaoCode)
     features.forEach(function(e){pilots.push(e.properties.pilot)})
   } catch (e) {}
 
@@ -112,7 +112,7 @@ app.get('/v1/atc/sectors', cors(), async (req, res) => {
   var sectors = await getATCSectors();
   if (standardOnly == "true"){
     sectors = sectors.filter(function(sector) {
-      return sector.standard_position===true;
+      return sector.standard_position == true;
     });
   }
   if(sectors == false){
