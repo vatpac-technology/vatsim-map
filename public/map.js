@@ -216,6 +216,7 @@ async function getPilots() {
     }
     var json = await response.json();
     pilots = json;
+    setPilotMarkers();
     return json;
 };
 
@@ -674,12 +675,13 @@ async function setPilotMarkers() {
                 reload = true;
             });
         }
+
+        updatePilotsLayer();
+
     } catch (err) {
         console.log(err)
     }
 };
-
-getPilots();
 
 (async () => {
     var dataset = await getDataset();
@@ -701,16 +703,14 @@ map.on('load', function () {
         zoom: findGetParameter('zoom') || 4,
     })
 
-    setPilotsLayer();
-    //setPilotMarkers();
+    //setPilotsLayer();
 
     // Main loop
     setAsyncInterval(async () => {
         const promise = new Promise((resolve) => {
             if (reload) {
                 getATCSectors();
-                setPilotMarkers(getPilots());
-                updatePilotsLayer();
+                getPilots();
             } else {
                 //console.log('Reload inhibited')
             }

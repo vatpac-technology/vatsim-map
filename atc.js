@@ -238,6 +238,7 @@ export async function getOnlinePositions() {
     var onlineSectors = [];
     var sectors = await getATCSectors();
     var stations = await getVatsimAFV();
+    var sectorWithSubsectors = false;
 
     // SY_APP 124.400 AFV 124400000
     // iterate txvrs.element.transceivers.element frequency/1000000
@@ -254,7 +255,7 @@ export async function getOnlinePositions() {
 
                         // Check std sectors and load sub sectors.
                         if(element.standard_position === true && element.responsibleSectors.length > 0){
-                            var sectorWithSubsectors = mergeSectors(element, element.responsibleSectors,sectors);
+                            sectorWithSubsectors = mergeSectors(element, element.responsibleSectors,sectors);
 
                             onlineSectors.push(sectorWithSubsectors);
                         }else{
@@ -272,13 +273,15 @@ export async function getOnlinePositions() {
                         })
 
                         activeFrequencies = uniq(activeFrequencies);
+                        var type = station.callsign.toUpperCase().includes("CTR");
 
-                        if(activeFrequencies.length > 1){
+                        if(activeFrequencies.length > 1 && type){
 
                             activeFrequencies.forEach(function(frequency){
-                                sectors.find(function cb(element){
+                                sectors.find(function cb(element){                                 
 
-                                    if(element.Frequency === frequency && element.Callsign != station.callsign){
+                                    if(element.Frequency == frequency && element.Callsign != station.callsign){
+
                                         var subSectorWithSubsectors = mergeSectors(element, element.responsibleSectors,sectors);
 
                                         var poly1 = turf.polygon(sectorWithSubsectors.geometry.coordinates)
