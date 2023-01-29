@@ -85,7 +85,7 @@ function pointInAerodrome (point, aerodromes){
     var inAerodrome = false;
     try{
         if(aerodromes == undefined){
-            log.debug("Aerodromes not loaded");
+            console.log("Aerodromes not loaded");
         }else{
             aerodromes.features.forEach(function(aerodrome){
                 if(aerodrome.properties.tags.icao != undefined){
