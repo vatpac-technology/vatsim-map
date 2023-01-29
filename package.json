@@ -17,7 +17,7 @@
     "express": "^4.17.1",
     "node-cache": "^5.1.2",
     "node-fetch": "^2.6.1",
-    "query-overpass": "file:dependencies/query-overpass",
+    "query-overpass": "^1.5.5",
     "rgb2hex": "^0.2.5",
     "sha1": "^1.1.1",
     "unique-random-array": "^3.0.0",
