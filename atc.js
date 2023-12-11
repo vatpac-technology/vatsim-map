@@ -244,8 +244,8 @@ export async function getOnlinePositions() {
     // iterate txvrs.element.transceivers.element frequency/1000000
     if(stations){
         stations.forEach(function(station, index){
-            // Keep only CTR, APP, and TWR.
-            if(station.callsign.toUpperCase().includes("CTR") || station.callsign.toUpperCase().includes("APP") || station.callsign.toUpperCase().includes("TWR"))
+            // Keep only FSS, CTR, APP, and TWR.
+            if(station.callsign.toUpperCase().includes("FSS") || station.callsign.toUpperCase().includes("CTR") || station.callsign.toUpperCase().includes("APP") || station.callsign.toUpperCase().includes("TWR"))
             {
                 // Join sectors by callsign
                 var sector = sectors.find(function cb(element){
@@ -276,7 +276,7 @@ export async function getOnlinePositions() {
                                 sectors.find(function cb(element){     
                                     
                                     activeFrequencies = uniq(activeFrequencies);
-                                    var type = station.callsign.toUpperCase().includes("CTR");
+                                    var type = station.callsign.toUpperCase().includes("FSS") || station.callsign.toUpperCase().includes("CTR");
 
                                     if(element.Frequency == frequency && element.Callsign != station.callsign && type && sectorWithSubsectors != false){
 

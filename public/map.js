@@ -285,18 +285,18 @@ async function getATCSectors() {
         var tmas = [];
         var twrs = [];
 
-        // Split CTR, TMA, and TWRs
+        // Split FSSS & CTR, TMA, and TWRs
         json.features.forEach(function (e) {
             //console.log(e.properties.Callsign)
-            if (e.properties.Callsign.includes("CTR")) {
+            if (e.properties.Callsign.includes("FSS") || e.properties.Callsign.includes("CTR")) {
                 //console.log(e)
                 ctrs.push(e);
             }
-            if (e.properties.Callsign.includes("APP")) {
+            else if (e.properties.Callsign.includes("APP")) {
                 //console.log(e)
                 tmas.push(e);
             }
-            if (e.properties.Callsign.includes("TWR")) {
+            else if (e.properties.Callsign.includes("TWR")) {
                 twrs.push(e);
             }
         });
