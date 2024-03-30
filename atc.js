@@ -1,13 +1,8 @@
-import { getLineFeatures, getXMLtoJS, getVatsimAFV } from './client.js';
-//import { polygon, featureCollection } from '@turf/helpers';
-import bunyan from 'bunyan';
+import { getLineFeatures, getXMLtoJS, getVatsimAFV, getVatsimData } from './client.js';
 import config from 'config';
 import * as turf from '@turf/turf';
 import { iso2dec } from './iso2dec.js';
 import rgb2hex from 'rgb2hex';
-import c from 'config';
-
-var log = bunyan.createLogger({name: config.get('app.name'), level: config.get('app.log_level')});
 
 //  sector:
 //  properties:
@@ -234,96 +229,125 @@ function isAdjacentSector(sectorFrequency, primarySector, sectors){
     }
 };
 
+export async function getOnlineControllers(){
+    // Get the sector boundary information for the region.
+    var sectors = await getATCSectors();
+    // Get the vatsim data.
+    var data = await getVatsimData();
+    // Initate array for output.
+    var onlineControllers = [];
+    // Loop through each online controller to see if they should be included.
+    data.controllers.forEach(function(controller) {
+        // Check if they are FSS, CTR, APP or TWR.
+        if (!controller.callsign.toUpperCase().includes("FSS") && 
+            !controller.callsign.toUpperCase().includes("CTR") && 
+            !controller.callsign.toUpperCase().includes("APP") && 
+            !controller.callsign.toUpperCase().includes("TWR"))
+        {
+           return;
+        }
+        // Check if they are controller for the right region.
+        if (!sectors.some(sector => sector.Callsign == controller.callsign.toUpperCase())) 
+        {
+            return;
+        }
+        // OK to add to the output.
+        onlineControllers.push(controller);
+    });
+    return onlineControllers;
+}
+
 export async function getOnlinePositions() {
+    // Initiate variables to use.
     var onlineSectors = [];
+    var sectorWithSubsectors = false;
+    // Get the required data.
     var sectors = await getATCSectors();
     var stations = await getVatsimAFV();
-    var sectorWithSubsectors = false;
-
-    // SY_APP 124.400 AFV 124400000
-    // iterate txvrs.element.transceivers.element frequency/1000000
-    if(stations){
-        stations.forEach(function(station, index){
-            // Keep only FSS, CTR, APP, and TWR.
-            if(station.callsign.toUpperCase().includes("FSS") || station.callsign.toUpperCase().includes("CTR") || station.callsign.toUpperCase().includes("APP") || station.callsign.toUpperCase().includes("TWR"))
-            {
-                // Join sectors by callsign
-                var sector = sectors.find(function cb(element){
-                    if(element.Callsign == station.callsign){        
-
-                        // Check std sectors and load sub sectors.
-                        if(element.standard_position === true && element.responsibleSectors.length > 0){
-                            sectorWithSubsectors = mergeSectors(element, element.responsibleSectors,sectors);
-
-                            onlineSectors.push(sectorWithSubsectors);
-                        }else{
-                            onlineSectors.push(mergeBoundaries(element));
-                        }
-
-                        // check if other frequencies are active and show them as online.
-                        // this only works for ENR sectors.
-
-                        var activeFrequencies = [];
-                        station.transceivers.forEach(function(element){
-                            // Hertz to Megahurts
-                            element.frequency = element.frequency/1000000;
-                            activeFrequencies.push(element.frequency.toFixed(3));
-                        })
-
-                        if(activeFrequencies.length > 1){
-
-                            activeFrequencies.forEach(function(frequency){
-                                sectors.find(function cb(element){     
-                                    
-                                    activeFrequencies = uniq(activeFrequencies);
-                                    var type = station.callsign.toUpperCase().includes("FSS") || station.callsign.toUpperCase().includes("CTR");
-
-                                    if(element.Frequency == frequency && element.Callsign != station.callsign && type && sectorWithSubsectors != false){
-
-                                        var subSectorWithSubsectors = mergeSectors(element, element.responsibleSectors,sectors);
-
-                                        var poly1 = turf.polygon(sectorWithSubsectors.geometry.coordinates)
-                                        var poly2 = turf.polygon(subSectorWithSubsectors.geometry.coordinates)
-                                        
-                                        var intersection = turf.booleanOverlap(poly1, poly2)
-
-                                        if(intersection){
-                                            onlineSectors.push(subSectorWithSubsectors);
-                                        }
-                                    }
-
-                                })
-                            })
-                        }
-                    };
-                });
-
-                /*
-                if(activePosition !== false){
-                    // Join sectors by frequency
-                    // TODO - How to incrementally add sectors working outwards from the logged on sector?
-                    var extendedPoly = activePosition;
-                    activeFrequncies.forEach(function(element){
-                        var adjacentSector = isAdjacentSector(element, extendedPoly, sectors);
-                        if(adjacentSector !== false){
-                            extendedPoly = unionArray([extendedPoly, sectorWithSubsectors])
-                            if(adjacentSector.standard_position === true){
-                                var sectorWithSubsectors = mergeSectors(adjacentSector, adjacentSector.responsibleSectors,sectors);
-                                onlineSectors.push(sectorWithSubsectors);
-                            }else{
-                                onlineSectors.push(mergeBoundaries(adjacentSector));
-                            }
-                        }
-                    })
+    var onlineControllers = await getOnlineControllers();
+    // If someone of the data missing, abort.
+    if (!sectors || !stations || !onlineControllers) return;
+    // Loop through each online controller to see if they should be included.
+    onlineControllers.forEach(function(onlineController) {
+        // Get the AFV stations for the controller.
+        var station = stations.find(station => station.callsign == onlineController.callsign);
+        // If no stations, move to the next controller.
+        if (!station) return;
+        // Get the sector for the position.
+        var sector = sectors.find(sector => sector.Callsign == onlineController.callsign);
+        // If no sector, move to the next controller.
+        if (!sector) return;
+        // Check std sectors and load sub sectors.
+        if (sector.standard_position === true && sector.responsibleSectors.length > 0) {
+            sectorWithSubsectors = mergeSectors(sector, sector.responsibleSectors,sectors);
+            onlineSectors.push(sectorWithSubsectors);
+        } else {
+            onlineSectors.push(mergeBoundaries(sector));
+        }
+        // Check if controller is extending.
+        var activeFrequencies = [];
+        station.transceivers.forEach(function(transceiver){
+            // Convert Hertz to Megahurts.
+            var convertedFrequency = (transceiver.frequency/1000000).toFixed(3);
+            // Check if already added.
+            if (activeFrequencies.some(frequency => frequency == convertedFrequency)) return;
+            // Add it to the list of active frequencies.
+            activeFrequencies.push(convertedFrequency);
+        });
+        // if only 1 frequency, nothing else to do.
+        if (activeFrequencies.length <= 1) return;
+        // 
+        activeFrequencies.forEach(function(activeFrequency) {
+            // Get all the sectors that use that frequency (but only CTR).
+            var frequencySectors = sectors.filter(sector => sector.Frequency == activeFrequency
+                && sector.Callsign.toUpperCase().includes("CTR"));
+            // If nothing found, continue.
+            if (!frequencySectors) return;
+            var extendedSector;
+            // Loops through each sector.
+            frequencySectors.forEach(frequencySector => {
+                // If the primary sector frequency, continue.
+                if (frequencySector.Callsign == sector.Callsign) return;
+                if (!extendedSector) 
+                {
+                    extendedSector = frequencySector;
+                    return;
                 }
-                */
+                if (getDistanceInKm(sector, extendedSector) > getDistanceInKm(sector, frequencySector))
+                {
+                    extendedSector = frequencySector;
+                }
+            });
+            if (!extendedSector) return;
+            // Remove the existing entry.
+            var existingIndex = onlineSectors.indexOf(onlineSectors.Callsign == extendedSector.Callsign);
+            if (existingIndex > -1) {
+                onlineSectors.splice(existingIndex, 1);
             }
-            else
-            {
-                delete stations[index];
-            }
+            // Insert the updated entry.
+            onlineSectors.push(mergeSectors(extendedSector, extendedSector.responsibleSectors, sectors));
         })
+    });
+    return turf.featureCollection(uniq(onlineSectors));
+}
 
-        return turf.featureCollection(uniq(onlineSectors));
-    }
+function getDistanceInKm(sector1, sector2) {
+    var lon1 = sector1.volumes[0].Boundaries[0].geometry.coordinates[0][0][0];
+    var lat1 = sector1.volumes[0].Boundaries[0].geometry.coordinates[0][0][1];
+    var lon2 = sector2.volumes[0].Boundaries[0].geometry.coordinates[0][0][0];
+    var lat2 = sector2.volumes[0].Boundaries[0].geometry.coordinates[0][0][1];
+    var R = 6371; // Radius of the earth in km
+    var dLat = deg2rad(lat2-lat1);  // deg2rad below
+    var dLon = deg2rad(lon2-lon1); 
+    var a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2); 
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    var d = R * c; // Distance in km
+    return d;
+}
+  
+function deg2rad(deg) {
+    return deg * (Math.PI/180)
 }

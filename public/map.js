@@ -424,9 +424,9 @@ async function getATCSectors() {
                 map.removeLayer('atcPoints');
             }
             
-            if (!this.map.getLayer('twrFill')) {
+            if (!this.map.getLayer('atcPoints')) {
                 map.addLayer({
-                    'id': 'twrFill',
+                    'id': 'atcPoints',
                     'type': 'symbol',
                     'source': 'atcLabelPoints',
                     'minzoom': 5,
