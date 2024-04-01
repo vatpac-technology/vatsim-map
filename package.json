@@ -1,7 +1,7 @@
 {
   "name": "vatsim-map",
   "type": "module",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Display VATSIM traffic on a map for a given set of FIRs",
   "private": true,
   "dependencies": {
