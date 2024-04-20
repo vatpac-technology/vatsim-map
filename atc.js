@@ -295,12 +295,12 @@ export async function getOnlinePositions() {
             activeFrequencies.push(convertedFrequency);
         });
         // if only 1 frequency, nothing else to do.
-        if (activeFrequencies.length <= 1 || !sector.Callsign.toUpperCase().includes("CTR")) return;
+        if (activeFrequencies.length <= 1) return;
         // 
         activeFrequencies.forEach(function(activeFrequency) {
-            // Get all the sectors that use that frequency (but only CTR).
+            // Get all the sectors that use that frequency (but only the same position type as the primary position).
             var frequencySectors = sectors.filter(sector => sector.Frequency == activeFrequency
-                && sector.Callsign.toUpperCase().includes("CTR"));
+                && sector.Callsign.toUpperCase().endsWith(onlineController.callsign.toUpperCase().slice(-3)));
             // If nothing found, continue.
             if (!frequencySectors) return;
             var extendedSector;
