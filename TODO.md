@@ -5,7 +5,6 @@
 * Join AFV freqs with sectors to show online.
 * Fix the on the ground altitude maths
 * Make light theme AD parts darker
-* Add implementation for TMA extensions (Coral & Tasmania)
 * Markers and labels are too small on the ground.
 * Query OSM via Overpass API for aeroway=parking_position
 // Get aerodrome polygon
