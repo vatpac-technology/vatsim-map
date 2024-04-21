@@ -37,3 +37,16 @@ Accepts the following GET parameters.
 |lon|Float|134.9|Sets the map center longitutde.|
 |lat|Float|-28.2|Sets the map center latitude.|
 |zoom|Float|4.3|Sets the map center zoom.|
+
+## Contributing
+
+### Dependencies
+
+* [Node.js and NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
+
+### Running the map
+
+1. Checkout the code.
+1. `npm -i`
+1. `npm run serve`
+1. Open [http://localhost:8080/](http://localhost:8080/)
