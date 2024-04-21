@@ -300,7 +300,7 @@ export async function getOnlinePositions() {
         activeFrequencies.forEach(function(activeFrequency) {
             // Get all the sectors that use that frequency (but only the same position type as the primary position).
             var frequencySectors = sectors.filter(sector => sector.Frequency == activeFrequency
-                && sector.Callsign.toUpperCase().endsWith(onlineController.callsign.toUpperCase().slice(-3)));
+                && sector.volumes.length > 0 && sector.Callsign.toUpperCase().endsWith(onlineController.callsign.toUpperCase().slice(-3)));
             // If nothing found, continue.
             if (!frequencySectors) return;
             var extendedSector;
