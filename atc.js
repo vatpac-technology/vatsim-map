@@ -247,7 +247,7 @@ export async function getOnlineControllers(){
            return;
         }
         // Check if they are controller for the right region.
-        if (!sectors.some(sector => sector.Callsign == controller.callsign.toUpperCase())) 
+        if (!sectors.some(sector => sector.Callsign == controller.callsign.toUpperCase()))
         {
             return;
         }
@@ -298,9 +298,9 @@ export async function getOnlinePositions() {
         if (activeFrequencies.length <= 1) return;
         // 
         activeFrequencies.forEach(function(activeFrequency) {
-            // Get all the sectors that use that frequency (but only CTR).
+            // Get all the sectors that use that frequency (but only the same position type as the primary position).
             var frequencySectors = sectors.filter(sector => sector.Frequency == activeFrequency
-                && sector.Callsign.toUpperCase().includes("CTR"));
+                && sector.volumes.length > 0 && sector.Callsign.toUpperCase().endsWith(onlineController.callsign.toUpperCase().slice(-3)));
             // If nothing found, continue.
             if (!frequencySectors) return;
             var extendedSector;
