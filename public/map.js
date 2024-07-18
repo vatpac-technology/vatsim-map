@@ -687,7 +687,7 @@ async function setPilotMarkers() {
     var dataset = await getDataset();
     //console.(dataset);
     map.addControl(new mapboxgl.AttributionControl({
-        customAttribution: `vatSys ${dataset.Profile._attributes.Name} dataset <strong>AIRAC ${dataset.Profile.Version._attributes.AIRAC}${dataset.Profile.Version._attributes.Revision}</strong> | <a href="https://github.com/Kahn/vatsim-map">vatsim-map</a>`
+        customAttribution: `vatSys ${dataset.Profile._attributes.Name} dataset <strong>AIRAC ${dataset.Profile.Version._attributes.AIRAC}${dataset.Profile.Version._attributes.Revision}</strong> | <a href="https://github.com/vatpac-technology/vatsim-map">vatsim-map</a>`
     }))
 })();
 
