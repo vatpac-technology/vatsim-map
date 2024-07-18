@@ -276,6 +276,31 @@ if (mobile) {
     //map.addControl(new mapboxgl.NavigationControl());
 }
 
+async function getATCOnline() {
+    try {
+        var response = await fetch(`${window.location.protocol}//${window.location.hostname}:${window.location.port}/v1/atc/online`);
+        var json = await response.json();
+        return json;
+    } catch (err) {
+        console.log(err);
+    }
+}
+// Render ATC online
+getATCOnline().then(data => {
+    console.log('ATC online' + data);
+  
+    const ul = document.createElement('ul');
+  
+    data.features.forEach(controlPosition => {
+      const li = document.createElement('li');
+      li.innerHTML = controlPosition.properties.Callsign;
+      ul.appendChild(li);
+    });
+  
+    const container = document.getElementById('atc-online');
+    container.appendChild(ul);
+  });
+
 
 async function getATCSectors() {
     try {
